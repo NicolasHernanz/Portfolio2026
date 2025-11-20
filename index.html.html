@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nicolas Hernanz | Analista de Seguridad y Sistemas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Chosen Palette: Modern Cyber Clean (Slate, Blue, Teal) -->
+    <!-- Application Structure Plan: 
+         1. Sidebar Navigation (Fixed left on desktop, bottom on mobile).
+         2. Main Content Area (Dynamic rendering).
+         3. Sections: 
+            - Overview: High level profile summary & stats.
+            - War Room (Cases): The core value. Interactive cards for each incident.
+            - Tech Stack: Skills visualization.
+            - Roadmap: Certifications & Education.
+    -->
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; color: #1e293b; }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .nav-item.active {
+            background-color: #0f172a;
+            color: #38bdf8;
+            border-left: 4px solid #38bdf8;
+        }
+        .case-card {
+            transition: all 0.3s ease;
+        }
+        .case-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            border-color: #38bdf8;
+        }
+        /* Chart Container Styling */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            height: 300px;
+            margin: 0 auto;
+        }
+        .timeline-line {
+            position: absolute;
+            left: 20px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background-color: #cbd5e1;
+            z-index: 0;
+        }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+
+    <!-- Sidebar Navigation -->
+    <aside class="w-64 bg-slate-900 text-slate-300 hidden md:flex flex-col shadow-xl z-20">
+        <div class="p-6 border-b border-slate-800 flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-xl">NH</div>
+            <div>
+                <h1 class="font-bold text-white">Nicolas Hernanz</h1>
+                <p class="text-xs text-slate-400">Analista SOC / SysAdmin</p>
+            </div>
+        </div>
+        
+        <nav class="flex-1 py-6 space-y-1">
+            <button onclick="renderView('overview')" id="nav-overview" class="nav-item w-full flex items-center gap-3 px-6 py-3 hover:bg-slate-800 hover:text-white transition-colors text-sm font-medium active">
+                <i class="fa-solid fa-chart-line w-5"></i> Resumen General
+            </button>
+            <button onclick="renderView('war-room')" id="nav-war-room" class="nav-item w-full flex items-center gap-3 px-6 py-3 hover:bg-slate-800 hover:text-white transition-colors text-sm font-medium">
+                <i class="fa-solid fa-shield-virus w-5"></i> War Room (Casos)
+            </button>
+            <button onclick="renderView('skills')" id="nav-skills" class="nav-item w-full flex items-center gap-3 px-6 py-3 hover:bg-slate-800 hover:text-white transition-colors text-sm font-medium">
+                <i class="fa-solid fa-layer-group w-5"></i> Stack Tecnológico
+            </button>
+            <button onclick="renderView('roadmap')" id="nav-roadmap" class="nav-item w-full flex items-center gap-3 px-6 py-3 hover:bg-slate-800 hover:text-white transition-colors text-sm font-medium">
+                <i class="fa-solid fa-graduation-cap w-5"></i> Formación y Certs
+            </button>
+        </nav>
+
+        <div class="p-6 border-t border-slate-800">
+            <div class="bg-slate-800 rounded-lg p-4">
+                <p class="text-xs text-slate-400 mb-2">Estado Actual</p>
+                <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                    <span class="text-sm font-bold text-white">Open to Work</span>
+                </div>
+                <p class="text-xs text-slate-500 mt-1">Buscando roles SOC Remoto</p>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Mobile Header -->
+    <div class="md:hidden fixed top-0 w-full bg-slate-900 text-white z-50 p-4 flex justify-between items-center shadow-md">
+        <span class="font-bold">Nicolas Hernanz</span>
+        <button id="mobile-menu-btn" class="text-slate-300"><i class="fa-solid fa-bars"></i></button>
+    </div>
+
+    <!-- Main Content -->
+    <main class="flex-1 overflow-y-auto bg-slate-50 p-4 md:p-8 pt-20 md:pt-8 relative">
+        <div id="content-area" class="max-w-6xl mx-auto">
+            <!-- Content injected via JS -->
+        </div>
+    </main>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // --- DATA STORE ---
+        const profileData = {
+            summary: {
+                title: "Técnico de Sistemas y Seguridad",
+                description: "Profesional de TI en transición hacia Analista SOC. Combino la experiencia operativa de un Administrador de Sistemas (VMWare, M365, Redes) con la mentalidad analítica de seguridad. Especializado en detección proactiva de amenazas, análisis forense de logs y respuesta a incidentes en entornos híbridos.",
+                stats: [
+                    { value: "5+", label: "Incidentes Mayores Resueltos", icon: "fa-fire-extinguisher", color: "text-red-500" },
+                    { value: "300", label: "Usuarios Gestionados", icon: "fa-users", color: "text-blue-500" },
+                    { value: "100%", label: "Disponibilidad Remota", icon: "fa-laptop-house", color: "text-green-500" },
+                    { value: "ISO", label: "Auditoría 27001", icon: "fa-clipboard-check", color: "text-purple-500" }
+                ]
+            },
+            cases: [
+                {
+                    id: "rovnix",
+                    title: "Incidente Troyano Rovnix",
+                    tag: "Threat Hunting / EDR",
+                    date: "Sep 2025",
+                    summary: "Detección proactiva de un 'Dropper' que evadió alertas críticas iniciales.",
+                    details: "Detecté actividad anómala en un endpoint que Microsoft Defender había bloqueado parcialmente pero no alertado como crítico. Investigando el árbol de procesos, identifiqué un 'Dropper' (Rovnix) descargado por el usuario. Localicé un servidor interno infectado que actuaba como origen secundario. Aislé el host, limpié el servidor y evité el despliegue del payload final (Ransomware/Spyware).",
+                    tools: ["Microsoft Defender", "KQL", "FortiGate"]
+                },
+                {
+                    id: "chatgpt",
+                    title: "Investigación Forense ChatGPT",
+                    tag: "Forensic / Logs",
+                    date: "Oct 2025",
+                    summary: "Atribución de actividad de usuario en aplicación sin auditoría nativa.",
+                    details: "Se requería identificar qué usuario realizó una acción en una cuenta compartida de ChatGPT. Al no existir logs de usuario en la app, utilicé las herramientas de desarrollador (F12) para extraer el timestamp exacto y el ID de dispositivo. Correlacioné este timestamp con los logs de tráfico web del firewall FortiGate para identificar la IP de origen y el usuario de Active Directory responsable.",
+                    tools: ["Browser DevTools", "FortiGate Logs", "Correlation"]
+                },
+                {
+                    id: "confluence",
+                    title: "Caída Servicio Confluence",
+                    tag: "Network / Troubleshooting",
+                    date: "Oct 2025",
+                    summary: "Diagnóstico de fallo de enrutamiento de Capa 3 en arquitectura DMZ.",
+                    details: "Tras la caída de un servicio crítico, descarté problemas de aplicación (Capa 7) y firewall local. Utilizando pruebas de conectividad (ping, curl) identifiqué un error 'Destination Host Unreachable' desde el Proxy Apache hacia el Backend. Diagnostiqué correctamente la caída de una ruta VPN estática entre la DMZ y la red de servidores, permitiendo la restauración del servicio.",
+                    tools: ["Linux CLI", "Ping/Curl", "VMWare", "Networking"]
+                },
+                {
+                    id: "inetum",
+                    title: "Análisis Phishing/BEC",
+                    tag: "Malware Analysis / Sandbox",
+                    date: "Oct 2025",
+                    summary: "Análisis de adjunto sospechoso (.eml) en Sandbox ANY.RUN.",
+                    details: "Usuario reportó correo sospechoso de proveedor legítimo con formato inusual. Ejecuté el adjunto en entorno aislado (ANY.RUN). El análisis técnico confirmó que el fichero era benigno (sin procesos hijos maliciosos ni conexiones C2), pero identifiqué un alto riesgo de fraude de negocio (BEC). Asesoré al usuario para validar el pedido por canal alternativo, previniendo un posible fraude financiero.",
+                    tools: ["ANY.RUN", "Sandbox", "Risk Assessment"]
+                },
+                {
+                    id: "krebshell",
+                    title: "Falso Positivo Webshell",
+                    tag: "Incident Response",
+                    date: "Nov 2025",
+                    summary: "Validación de 'Intención Benigna' en alerta de seguridad crítica.",
+                    details: "Alerta de Defender sobre 'Backdoor:PHP/Krebshell'. Inicié protocolo de contención aislando el host. La investigación reveló que no había persistencia en registro ni servidor web activo. El análisis de contexto identificó al usuario como personal de seguridad realizando pruebas. Clasificado como 'True Positive / Benign Intent' y restaurado el servicio.",
+                    tools: ["Live Response", "Registry Analysis", "Context"]
+                }
+            ],
+            skills: {
+                security: ["Microsoft Defender EDR", "Fortinet FortiGate", "Incident Response", "Threat Hunting", "Forensics Basics", "Wazuh (Lab)", "ANY.RUN"],
+                systems: ["Windows Server AD/DNS", "Linux (Ubuntu/CentOS)", "VMWare vSphere", "Microsoft 365", "Entra ID", "Intune"],
+                soft: ["Pensamiento Crítico", "Comunicación Técnica", "Inglés Técnico (Lectura)", "Resolución de Problemas"]
+            },
+            certs: [
+                { title: "CCNAv7: Switching, Routing, Wireless", org: "Cisco", status: "Completado" },
+                { title: "CyberOps Associate", org: "Cisco", status: "Completado" },
+                { title: "Técnico Superior ASIR", org: "Formación Profesional", status: "En Curso (Nota media 8.5)" },
+                { title: "Microsoft SC-200", org: "Microsoft", status: "Objetivo Q1 2026" },
+                { title: "Fortinet FCP Security", org: "Fortinet", status: "En Proceso" }
+            ]
+        };
+
+        // --- RENDER FUNCTIONS ---
+
+        function renderOverview() {
+            const statsHtml = profileData.summary.stats.map(stat => `
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center text-xl ${stat.color}">
+                        <i class="fa-solid ${stat.icon}"></i>
+                    </div>
+                    <div>
+                        <p class="text-2xl font-bold text-slate-800">${stat.value}</p>
+                        <p class="text-xs text-slate-500 uppercase tracking-wide font-semibold">${stat.label}</p>
+                    </div>
+                </div>
+            `).join('');
+
+            return `
+                <div class="animate-fade-in space-y-8">
+                    <!-- Header -->
+                    <div class="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm relative overflow-hidden">
+                        <div class="absolute top-0 right-0 w-64 h-64 bg-blue-50 rounded-full -mr-16 -mt-16 opacity-50 pointer-events-none"></div>
+                        <div class="relative z-10">
+                            <h2 class="text-3xl md:text-4xl font-bold text-slate-800 mb-2">Hola, soy Nicolas</h2>
+                            <h3 class="text-xl text-blue-600 font-medium mb-4">${profileData.summary.title}</h3>
+                            <p class="text-slate-600 max-w-3xl leading-relaxed text-lg">${profileData.summary.description}</p>
+                            
+                            <div class="mt-6 flex flex-wrap gap-3">
+                                <span class="px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-sm font-medium border border-slate-200">Fortinet</span>
+                                <span class="px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-sm font-medium border border-slate-200">Microsoft Defender</span>
+                                <span class="px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-sm font-medium border border-slate-200">VMWare</span>
+                                <span class="px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-sm font-medium border border-slate-200">Wazuh</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Stats Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        ${statsHtml}
+                    </div>
+
+                    <!-- Quick Preview of Skills Chart -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                         <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                            <h3 class="font-bold text-slate-800 mb-4 flex items-center gap-2"><i class="fa-solid fa-radar text-blue-500"></i> Radar de Competencias</h3>
+                            <div class="chart-container">
+                                <canvas id="skillsRadar"></canvas>
+                            </div>
+                        </div>
+                        <div class="bg-slate-900 p-6 rounded-xl text-white shadow-lg flex flex-col justify-between relative overflow-hidden">
+                            <div class="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
+                            <div class="relative z-10">
+                                <h3 class="font-bold text-xl mb-2">Objetivo Profesional</h3>
+                                <p class="text-slate-300 mb-6">Transición a un rol de <strong>Analista SOC N1/N2 </strong> donde pueda aplicar mi experiencia práctica en resolución de incidentes y administración de sistemas para proteger infraestructuras críticas.</p>
+                                <button onclick="renderView('war-room')" class="self-start bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                                    Ver mis Casos Reales
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderWarRoom() {
+            const casesHtml = profileData.cases.map((c, index) => `
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden case-card cursor-pointer group" onclick="toggleCase('${c.id}')">
+                    <div class="p-6 border-l-4 border-blue-500 h-full flex flex-col">
+                        <div class="flex justify-between items-start mb-3">
+                            <span class="px-2 py-1 bg-blue-50 text-blue-700 text-xs font-bold uppercase rounded border border-blue-100">${c.tag}</span>
+                            <span class="text-slate-400 text-sm font-mono">${c.date}</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-800 mb-2 group-hover:text-blue-600 transition-colors">${c.title}</h3>
+                        <p class="text-slate-600 text-sm mb-4 flex-1">${c.summary}</p>
+                        
+                        <div class="flex flex-wrap gap-2 mt-auto">
+                            ${c.tools.map(t => `<span class="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded">${t}</span>`).join('')}
+                        </div>
+                        
+                        <!-- Hidden Details -->
+                        <div id="case-${c.id}" class="hidden mt-4 pt-4 border-t border-slate-100 animate-fade-in">
+                            <p class="text-slate-700 text-sm leading-relaxed bg-slate-50 p-3 rounded border border-slate-100">
+                                <i class="fa-solid fa-magnifying-glass text-blue-400 mr-2"></i>
+                                ${c.details}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            return `
+                <div class="animate-fade-in space-y-6">
+                    <div class="flex justify-between items-end mb-2">
+                        <div>
+                            <h2 class="text-3xl font-bold text-slate-800">War Room</h2>
+                            <p class="text-slate-500">Casos prácticos e incidentes reales resueltos.</p>
+                        </div>
+                        <span class="bg-red-100 text-red-600 text-xs font-bold px-3 py-1 rounded-full animate-pulse">Live Data</span>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        ${casesHtml}
+                    </div>
+                    
+                    <div class="mt-8 p-4 bg-blue-50 rounded-lg border border-blue-100 text-sm text-blue-800 flex gap-3 items-start">
+                        <i class="fa-solid fa-info-circle mt-1"></i>
+                        <p><strong>Nota:</strong> Estos casos demuestran una metodología basada en evidencia, diferenciación entre riesgo técnico/negocio y capacidad de troubleshooting en capas profundas (OS, Red), más allá del simple triaje de alertas.</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSkills() {
+            return `
+                <div class="animate-fade-in space-y-8">
+                    <h2 class="text-3xl font-bold text-slate-800 mb-6">Stack Tecnológico</h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <!-- Security Column -->
+                        <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+                            <div class="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
+                                <div class="w-10 h-10 rounded-lg bg-red-100 text-red-600 flex items-center justify-center"><i class="fa-solid fa-shield-halved"></i></div>
+                                <h3 class="font-bold text-lg text-slate-800">Ciberseguridad</h3>
+                            </div>
+                            <ul class="space-y-3">
+                                ${profileData.skills.security.map(s => `<li class="flex items-center gap-2 text-slate-600 text-sm"><i class="fa-solid fa-check text-green-500"></i> ${s}</li>`).join('')}
+                            </ul>
+                        </div>
+
+                        <!-- Systems Column -->
+                        <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+                            <div class="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
+                                <div class="w-10 h-10 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center"><i class="fa-solid fa-server"></i></div>
+                                <h3 class="font-bold text-lg text-slate-800">Sistemas & Cloud</h3>
+                            </div>
+                            <ul class="space-y-3">
+                                ${profileData.skills.systems.map(s => `<li class="flex items-center gap-2 text-slate-600 text-sm"><i class="fa-solid fa-check text-green-500"></i> ${s}</li>`).join('')}
+                            </ul>
+                        </div>
+
+                         <!-- Soft Skills Column -->
+                        <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+                            <div class="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
+                                <div class="w-10 h-10 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center"><i class="fa-solid fa-brain"></i></div>
+                                <h3 class="font-bold text-lg text-slate-800">Competencias</h3>
+                            </div>
+                            <ul class="space-y-3">
+                                ${profileData.skills.soft.map(s => `<li class="flex items-center gap-2 text-slate-600 text-sm"><i class="fa-solid fa-star text-yellow-400"></i> ${s}</li>`).join('')}
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-800 text-white p-8 rounded-xl">
+                         <h3 class="font-bold text-xl mb-4">Laboratorio Personal</h3>
+                         <p class="text-slate-300 mb-4">Entorno activo para experimentación segura y aprendizaje continuo.</p>
+                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div class="bg-slate-700 p-4 rounded border border-slate-600">
+                                <h4 class="font-bold text-blue-400 mb-1">Wazuh SIEM</h4>
+                                <p class="text-xs text-slate-400">Despliegue 'All-in-one' en Ubuntu Server. Agentes desplegados en endpoints Windows para monitorización de integridad de archivos y detección de amenazas (simulaciones con Atomic Red Team).</p>
+                            </div>
+                             <div class="bg-slate-700 p-4 rounded border border-slate-600">
+                                <h4 class="font-bold text-red-400 mb-1">TryHackMe</h4>
+                                <p class="text-xs text-slate-400">Top X% Rank. Rutas completadas: Pre-Security, Cyber Defense. Máquinas prácticas de pentesting y análisis de tráfico.</p>
+                            </div>
+                         </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderRoadmap() {
+            return `
+                <div class="animate-fade-in max-w-3xl mx-auto">
+                    <h2 class="text-3xl font-bold text-slate-800 mb-2">Formación & Roadmap</h2>
+                    <p class="text-slate-500 mb-8">Aprendizaje continuo y validación oficial.</p>
+
+                    <div class="space-y-6 relative pl-4">
+                        <div class="timeline-line"></div>
+                        ${profileData.certs.map(c => `
+                            <div class="bg-white p-5 rounded-lg border border-slate-200 shadow-sm relative z-10 ml-6 flex justify-between items-center group hover:border-blue-300 transition-colors">
+                                <div class="absolute left-[-31px] top-1/2 transform -translate-y-1/2 w-4 h-4 rounded-full ${c.status === 'Completado' ? 'bg-green-500' : (c.status.includes('Objetivo') ? 'bg-slate-300' : 'bg-yellow-500')} border-4 border-slate-50"></div>
+                                <div>
+                                    <h3 class="font-bold text-slate-800">${c.title}</h3>
+                                    <p class="text-sm text-slate-500">${c.org}</p>
+                                </div>
+                                <span class="text-xs font-bold px-3 py-1 rounded-full ${
+                                    c.status === 'Completado' ? 'bg-green-100 text-green-700' : 
+                                    (c.status.includes('Objetivo') ? 'bg-slate-100 text-slate-500' : 'bg-yellow-100 text-yellow-700')
+                                }">${c.status}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function toggleCase(id) {
+            const el = document.getElementById(`case-${id}`);
+            if (el.classList.contains('hidden')) {
+                el.classList.remove('hidden');
+            } else {
+                el.classList.add('hidden');
+            }
+        }
+
+        function initChart() {
+            const ctx = document.getElementById('skillsRadar');
+            if (!ctx) return;
+            
+            new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['Incident Response', 'SysAdmin (Win/Lin)', 'Network Security', 'Forensics', 'Cloud Security (M365)', 'Troubleshooting'],
+                    datasets: [{
+                        label: 'Nivel de Competencia',
+                        data: [80, 90, 85, 65, 75, 95],
+                        fill: true,
+                        backgroundColor: 'rgba(56, 189, 248, 0.2)',
+                        borderColor: 'rgb(56, 189, 248)',
+                        pointBackgroundColor: 'rgb(15, 23, 42)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgb(56, 189, 248)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    elements: { line: { borderWidth: 3 } },
+                    scales: {
+                        r: {
+                            angleLines: { color: 'rgba(0,0,0,0.1)' },
+                            grid: { color: 'rgba(0,0,0,0.05)' },
+                            pointLabels: { font: { size: 11, weight: '600' }, color: '#475569' },
+                            ticks: { display: false, max: 100 }
+                        }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        function renderView(viewName) {
+            const contentArea = document.getElementById('content-area');
+            
+            // Update Nav
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active', 'bg-slate-800', 'text-white'));
+            const activeNav = document.getElementById(`nav-${viewName}`);
+            if(activeNav) activeNav.classList.add('active');
+
+            // Render Content
+            if (viewName === 'overview') {
+                contentArea.innerHTML = renderOverview();
+                setTimeout(initChart, 100); // Delay for DOM
+            } else if (viewName === 'war-room') {
+                contentArea.innerHTML = renderWarRoom();
+            } else if (viewName === 'skills') {
+                contentArea.innerHTML = renderSkills();
+            } else if (viewName === 'roadmap') {
+                contentArea.innerHTML = renderRoadmap();
+            }
+        }
+
+        // Init
+        document.addEventListener('DOMContentLoaded', () => {
+            renderView('overview');
+        });
+
+    </script>
+    <style>
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+    </style>
+</body>
+</html>
