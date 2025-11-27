@@ -153,6 +153,15 @@
                     details: "Tras la caída de un servicio crítico, descarté problemas de aplicación (Capa 7) y firewall local. Utilizando pruebas de conectividad (ping, curl) identifiqué un error 'Destination Host Unreachable' desde el Proxy Apache hacia el Backend. Diagnostiqué correctamente la caída de una ruta VPN estática entre la DMZ y la red de servidores, permitiendo la restauración del servicio.",
                     tools: ["Linux CLI", "Ping/Curl", "VMWare", "Networking"]
                 },
+		{
+                    id: "pdf-evasion",
+                    title: "Phishing Evasivo: Factura CFDI",
+                    tag: "Malware Analysis / Evasión",
+                    date: "Nov 2025",
+                    summary: "Detección manual de PDF cifrado con Geofencing que evadía Sandbox.",
+                    details: "Investigación de una supuesta factura urgente. El análisis dinámico en Any.Run dio 'Falso Negativo' (Verde) debido a que el servidor atacante bloqueaba IPs de Sandbox (Geofencing/Cloudflare). Realicé análisis estático manual (Bloc de Notas) revelando generación automática (TCPDF) y el uso del parámetro '/Encrypt' para ocultar URLs. Confirmé que el archivo solicitaba contraseña al abrirse, una técnica clásica para cegar a los antivirus. Se extrajeron los IOCs y se bloqueó el dominio.",
+                    tools: ["Static Analysis", "Notepad", "Any.Run", "Defense Evasion"]
+                },
                 {
                     id: "inetum",
                     title: "Análisis Phishing/BEC",
