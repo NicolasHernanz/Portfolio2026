@@ -181,6 +181,24 @@
                     tools: ["Live Response", "Registry Analysis", "Context"]
                 },
 				{
+                    id: "bf-identity",
+                    title: "Compromiso de Identidad (Black Friday)",
+                    tag: "Identity / Phishing",
+                    date: "Nov 2025",
+                    summary: "Contención de ataque de 'Credential Harvesting' con múltiples usuarios comprometidos.",
+                    details: "Detección de campaña de Phishing masiva suplantando ofertas de Black Friday dirigida a Ventas. Dos usuarios introdujeron credenciales corporativas. Se detectaron inicios de sesión de riesgo (Impossible Travel) en Entra ID. Se ejecutó respuesta inmediata: Aislamiento de dispositivos vía Intune, revocación de tokens de sesión (Revoke-SPOUserSession), reseteo forzado de contraseñas y análisis forense con Live Response para descartar persistencia (Scheduled Tasks/Run Keys).",
+                    tools: ["Entra ID (Azure AD)", "Intune", "Defender Live Response", "KQL"]
+                },
+				{
+                    id: "ps-obfuscated",
+                    title: "Ejecución PowerShell Malicioso",
+                    tag: "Endpoint / Malware Analysis",
+                    date: "Dec 2025",
+                    summary: "Interrupción de 'Loader' malicioso basado en scripts ofuscados.",
+                    details: "Alerta crítica de EDR: 'Suspicious PowerShell Command Line'. Un usuario ejecutó una supuesta 'Felicitación Navideña.js'. El script lanzó una instancia oculta de PowerShell con comandos codificados en Base64. Realicé la decodificación manual del script, revelando un intento de descarga (DownloadString) desde un dominio C2 externo. El EDR bloqueó la ejecución (AMSI), pero procedí a aislar el host y bloquear el dominio e IP en el Firewall perimetral preventivamente.",
+                    tools: ["Defender for Endpoint", "PowerShell Decoding", "AMSI", "Firewalling"]
+                },
+				{
                     id: "ceo-phishing",
                     title: "Investigación Phishing C-Level",
                     tag: "Threat Intel / Social Eng.",
@@ -478,4 +496,5 @@
 </body>
 
 </html>
+
 
