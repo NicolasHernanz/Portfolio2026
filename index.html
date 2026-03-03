@@ -1,609 +1,721 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-theme="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nicolas Hernanz | Analista de Seguridad y Sistemas</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-    
-    <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; color: #1e293b; }
-        .glass-panel {
-            background: rgba(255, 255, 255, 0.95);
-            border: 1px solid rgba(226, 232, 240, 0.8);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-        }
-        .nav-item.active {
-            background-color: #0f172a;
-            color: #38bdf8;
-            border-left: 4px solid #38bdf8;
-        }
-        .case-card {
-            transition: all 0.3s ease;
-        }
-        .case-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-            border-color: #38bdf8;
-        }
-        /* Chart Container Styling */
-        .chart-container {
-            position: relative;
-            width: 100%;
-            max-width: 500px;
-            height: 300px;
-            margin: 0 auto;
-        }
-        .timeline-line {
-            position: absolute;
-            left: 20px;
-            top: 0;
-            bottom: 0;
-            width: 2px;
-            background-color: #cbd5e1;
-            z-index: 0;
-        }
-        /* Project Card Gradient */
-        .project-gradient {
-            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nicolas Hernanz | SOC Analyst</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#060a10;--bg2:#0b1018;--surface:#0f1623;--surface2:#151e2e;
+  --border:rgba(56,183,255,.07);--border2:rgba(56,183,255,.16);
+  --accent:#38bff8;--accent2:#6366f1;--accent3:#10b981;
+  --red:#f43f5e;--yellow:#fbbf24;--orange:#fb923c;
+  --text:#dde8f5;--muted:#5a7399;--dim:#2d3f58;
+  --shadow:rgba(0,0,0,.5);--noise:.5;
+}
+[data-theme="light"]{
+  --bg:#f0f4fa;--bg2:#e8edf5;--surface:#ffffff;--surface2:#eef2f8;
+  --border:rgba(56,130,200,.1);--border2:rgba(56,130,200,.22);
+  --text:#0f1e35;--muted:#5a7090;--dim:#9aacc0;
+  --shadow:rgba(0,0,0,.12);--noise:.15;
+}
+*{box-sizing:border-box;margin:0;padding:0;cursor:none!important;}
+#cursor{position:fixed;width:8px;height:8px;background:var(--accent);border-radius:50%;pointer-events:none;z-index:99999;transform:translate(-50%,-50%);transition:width .15s,height .15s;mix-blend-mode:screen;}
+#cursor-ring{position:fixed;width:32px;height:32px;border:1px solid rgba(56,183,255,.35);border-radius:50%;pointer-events:none;z-index:99998;transform:translate(-50%,-50%);}
+[data-theme="light"] #cursor{mix-blend-mode:multiply;}
+body{font-family:'JetBrains Mono',monospace;background:var(--bg);color:var(--text);overflow-x:hidden;transition:background .35s,color .35s;}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E");pointer-events:none;z-index:9999;opacity:var(--noise);transition:opacity .35s;}
+
+/* SPLASH */
+#splash{position:fixed;inset:0;background:var(--bg);z-index:10000;display:flex;align-items:center;justify-content:center;transition:opacity .7s,transform .7s cubic-bezier(.4,0,.2,1);}
+#splash.gone{opacity:0;transform:translateY(-100%);pointer-events:none;}
+.splash-inner{max-width:480px;width:90%;}
+.sl{font-size:12px;color:var(--muted);margin:3px 0;opacity:0;transform:translateX(-12px);transition:opacity .3s,transform .3s;}
+.sl.show{opacity:1;transform:none;}
+.ok{color:var(--accent3)}.hl{color:var(--accent)}
+.sname{font-family:'Syne',sans-serif;font-size:clamp(36px,6vw,70px);font-weight:800;color:var(--text);margin:26px 0 6px;opacity:0;transform:translateY(16px);transition:opacity .5s .1s,transform .5s .1s;}
+.sname.show{opacity:1;transform:none;}
+.srole{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--accent);opacity:0;transition:opacity .5s .25s;}
+.srole.show{opacity:1;}
+.sbar{width:100%;height:1px;background:var(--dim);margin-top:34px;overflow:hidden;opacity:0;transition:opacity .3s .4s;}
+.sbar.show{opacity:1;}
+.sbar-fill{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width 1.9s cubic-bezier(.4,0,.2,1);}
+.sbar-fill.go{width:100%;}
+
+/* APP */
+#app{display:flex;height:100vh;overflow:hidden;opacity:0;transition:opacity .6s;}
+#app.visible{opacity:1;}
+
+/* SIDEBAR */
+aside{width:256px;min-width:256px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;position:relative;z-index:20;transition:background .35s,border-color .35s;}
+aside::before{content:'';position:absolute;top:-80px;left:-80px;width:220px;height:220px;background:radial-gradient(circle,rgba(56,183,255,.05) 0%,transparent 70%);pointer-events:none;}
+.logo-area{padding:24px 20px 20px;border-bottom:1px solid var(--border);transition:border-color .35s;}
+.avatar{width:42px;height:42px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:13px;color:#fff;flex-shrink:0;position:relative;}
+.avatar::after{content:'';position:absolute;inset:-1px;border-radius:11px;background:linear-gradient(135deg,var(--accent),var(--accent2));z-index:-1;opacity:.25;filter:blur(8px);}
+.logo-name{font-family:'Syne',sans-serif;font-weight:700;font-size:14px;color:var(--text);}
+.logo-sub{font-size:10px;color:var(--muted);margin-top:2px;}
+.nav-lbl{font-size:9px;letter-spacing:1.8px;text-transform:uppercase;color:var(--dim);padding:18px 20px 8px;font-family:'Syne',sans-serif;}
+.nav-item{display:flex;align-items:center;gap:11px;padding:10px 20px;font-size:11px;font-family:'Syne',sans-serif;font-weight:600;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);cursor:none;transition:all .2s;background:none;border:none;width:100%;text-align:left;border-left:2px solid transparent;}
+.nav-item i{font-size:12px;width:14px;text-align:center;}
+.nav-item:hover{color:var(--text);background:rgba(56,183,255,.04);}
+.nav-item.active{color:var(--accent);background:rgba(56,183,255,.06);border-left-color:var(--accent);}
+.nav-count{margin-left:auto;font-size:9px;background:var(--surface2);padding:2px 7px;border-radius:10px;color:var(--muted);}
+.nav-item.active .nav-count{background:rgba(56,183,255,.12);color:var(--accent);}
+.theme-btn{display:flex;align-items:center;gap:8px;margin:0 14px 6px;padding:9px 14px;background:var(--surface);border:1px solid var(--border);border-radius:9px;color:var(--muted);font-size:11px;font-family:'JetBrains Mono',monospace;cursor:none;transition:all .2s;width:calc(100% - 28px);}
+.theme-btn:hover{border-color:var(--border2);color:var(--text);}
+.toggle-track{width:32px;height:16px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);margin-left:auto;position:relative;transition:background .3s;}
+.toggle-track.on{background:rgba(56,183,255,.2);border-color:var(--accent);}
+.toggle-thumb{position:absolute;top:2px;left:2px;width:10px;height:10px;border-radius:50%;background:var(--muted);transition:all .25s;}
+.toggle-track.on .toggle-thumb{left:18px;background:var(--accent);}
+.sidebar-footer{margin:4px 14px 18px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;transition:background .35s,border-color .35s;}
+.sf-lbl{font-size:9px;letter-spacing:1.2px;text-transform:uppercase;color:var(--dim);margin-bottom:10px;}
+.sf-dot{width:7px;height:7px;border-radius:50%;background:var(--accent3);animation:pdot 2s ease-in-out infinite;flex-shrink:0;}
+@keyframes pdot{0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,.5);}50%{box-shadow:0 0 0 5px rgba(16,185,129,0);}}
+.sf-title{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:var(--text);}
+.sf-sub{font-size:10px;color:var(--muted);margin-top:3px;}
+.sf-links{display:flex;gap:7px;margin-top:12px;}
+.sf-link{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:7px;background:var(--surface2);border:1px solid var(--border);color:var(--muted);font-size:12px;transition:all .2s;text-decoration:none;}
+.sf-link:hover{background:rgba(56,183,255,.1);border-color:var(--border2);color:var(--accent);}
+
+/* MAIN */
+main{flex:1;overflow-y:auto;overflow-x:hidden;}
+main::-webkit-scrollbar{width:3px;}
+main::-webkit-scrollbar-thumb{background:var(--surface2);border-radius:2px;}
+
+/* HERO */
+#hero-wrap{position:sticky;top:0;z-index:30;pointer-events:none;}
+#hero{padding:52px 44px 40px;background:linear-gradient(180deg,var(--bg) 55%,transparent 100%);transition:all .4s cubic-bezier(.4,0,.2,1);pointer-events:all;border-bottom:1px solid transparent;}
+#hero.collapsed{padding:13px 44px;background:rgba(6,10,16,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom-color:var(--border);}
+[data-theme="light"] #hero.collapsed{background:rgba(240,244,250,.92);}
+.hero-sub{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:10px;transition:all .35s;max-height:28px;opacity:1;overflow:hidden;}
+#hero.collapsed .hero-sub{max-height:0;opacity:0;margin:0;}
+.hero-big{font-family:'Syne',sans-serif;font-size:clamp(28px,4vw,50px);font-weight:800;line-height:1.05;transition:all .4s cubic-bezier(.4,0,.2,1);}
+#hero.collapsed .hero-big{font-size:clamp(16px,2vw,20px);}
+.hero-name-row{display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+.hero-meta{display:none;align-items:center;gap:12px;font-size:11px;color:var(--muted);margin-left:4px;}
+#hero.collapsed .hero-meta{display:flex;}
+.h-sep{width:1px;height:12px;background:var(--dim);}
+.hero-desc{font-size:12px;color:var(--muted);line-height:1.85;max-width:660px;margin-top:14px;transition:all .4s;max-height:80px;opacity:1;overflow:hidden;}
+#hero.collapsed .hero-desc{max-height:0;opacity:0;margin:0;}
+.hero-tags{display:flex;flex-wrap:wrap;gap:7px;margin-top:14px;transition:all .4s;max-height:50px;opacity:1;overflow:hidden;}
+#hero.collapsed .hero-tags{max-height:0;opacity:0;margin:0;}
+.glitch{position:relative;}
+.glitch::before,.glitch::after{content:attr(data-text);position:absolute;top:0;left:0;overflow:hidden;clip-path:inset(0);}
+.glitch::before{text-shadow:-1px 0 var(--red);animation:g1 6s infinite linear alternate-reverse;}
+.glitch::after{text-shadow:1px 0 var(--accent);animation:g2 6s infinite linear alternate-reverse;}
+@keyframes g1{0%{clip-path:inset(40% 0 61% 0);transform:translate(-1px)}25%{clip-path:inset(92% 0 1% 0)}50%{clip-path:inset(43% 0 1% 0)}75%{clip-path:inset(25% 0 58% 0)}100%{clip-path:inset(58% 0 43% 0);transform:translate(1px)}}
+@keyframes g2{0%{clip-path:inset(50% 0 30% 0);transform:translate(1px)}30%{clip-path:inset(15% 0 72% 0)}60%{clip-path:inset(80% 0 5% 0)}100%{clip-path:inset(5% 0 85% 0);transform:translate(-1px)}}
+
+/* SECTIONS */
+#sections{padding:0 44px 80px;}
+.section-block{margin-bottom:60px;opacity:0;transform:translateY(22px);transition:opacity .65s cubic-bezier(.4,0,.2,1),transform .65s cubic-bezier(.4,0,.2,1);}
+.section-block.in-view{opacity:1;transform:none;}
+.sec-lbl{display:flex;align-items:center;gap:10px;margin-bottom:22px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);font-family:'Syne',sans-serif;}
+.sec-lbl::after{content:'';flex:1;height:1px;background:var(--border);}
+.sec-lbl span{color:var(--accent);}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:11px;margin-bottom:18px;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:20px;position:relative;overflow:hidden;transition:all .25s;}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--cl),transparent);opacity:0;transition:opacity .25s;}
+.stat-card:hover{border-color:var(--border2);transform:translateY(-3px);box-shadow:0 12px 28px var(--shadow);}
+.stat-card:hover::before{opacity:1;}
+.stat-card.red{--cl:var(--red)}.stat-card.blue{--cl:var(--accent)}.stat-card.green{--cl:var(--accent3)}.stat-card.purple{--cl:var(--accent2)}
+.stat-bg{position:absolute;right:-8px;bottom:-12px;font-family:'Syne',sans-serif;font-size:64px;font-weight:800;opacity:.035;line-height:1;pointer-events:none;color:var(--text);}
+.stat-ic{font-size:13px;margin-bottom:14px;}
+.stat-card.red .stat-ic{color:var(--red)}.stat-card.blue .stat-ic{color:var(--accent)}.stat-card.green .stat-ic{color:var(--accent3)}.stat-card.purple .stat-ic{color:var(--accent2)}
+.stat-v{font-family:'Syne',sans-serif;font-size:30px;font-weight:800;color:var(--text);line-height:1;margin-bottom:5px;}
+.stat-l{font-size:9px;letter-spacing:.7px;text-transform:uppercase;color:var(--muted);}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:22px;transition:background .35s,border-color .25s;}
+.card:hover{border-color:var(--border2);}
+.scanline{position:relative;overflow:hidden;}
+.scanline:hover::after{content:'';position:absolute;left:0;right:0;height:70px;background:linear-gradient(180deg,transparent,rgba(56,183,255,.04),transparent);animation:scan .7s linear;pointer-events:none;z-index:2;}
+@keyframes scan{0%{top:-70px}100%{top:110%}}
+
+/* TAGS */
+.tag{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:6px;font-size:10px;border:1px solid;font-family:'JetBrains Mono',monospace;}
+.ta{background:rgba(56,183,255,.07);border-color:rgba(56,183,255,.2);color:var(--accent);}
+.td{background:rgba(255,255,255,.03);border-color:var(--border2);color:var(--muted);}
+[data-theme="light"] .td{background:rgba(0,0,0,.04);}
+.tg{background:rgba(16,185,129,.07);border-color:rgba(16,185,129,.2);color:var(--accent3);}
+.tp{background:rgba(99,102,241,.08);border-color:rgba(99,102,241,.2);color:#818cf8;}
+.tr{background:rgba(244,63,94,.07);border-color:rgba(244,63,94,.2);color:#fb7185;}
+.ty{background:rgba(251,191,36,.07);border-color:rgba(251,191,36,.2);color:var(--yellow);}
+
+/* PROGRESS */
+.prg-item{margin-bottom:13px;}
+.prg-lbl{display:flex;justify-content:space-between;margin-bottom:5px;font-size:11px;}
+.prg-lbl span:first-child{color:var(--muted);}
+.prg-lbl span:last-child{color:var(--dim);}
+.prg-track{height:2px;background:var(--surface2);border-radius:2px;overflow:hidden;}
+.prg-fill{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:2px;transition:width 1.2s cubic-bezier(.4,0,.2,1);}
+
+/* PROJECT */
+.project-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:36px;position:relative;overflow:hidden;transition:background .35s,border-color .25s;}
+.project-card::after{content:'SOC';position:absolute;right:-18px;bottom:-32px;font-family:'Syne',sans-serif;font-size:110px;font-weight:800;color:var(--text);opacity:.02;pointer-events:none;line-height:1;}
+.project-card::before{content:'';position:absolute;top:0;right:0;width:300px;height:300px;background:radial-gradient(circle,rgba(99,102,241,.06) 0%,transparent 70%);pointer-events:none;}
+.proj-title{font-family:'Syne',sans-serif;font-size:21px;font-weight:800;margin-bottom:4px;color:var(--text);}
+.proj-sub{font-size:11px;color:var(--muted);margin-bottom:20px;letter-spacing:.3px;}
+.proj-desc{font-size:12px;color:var(--muted);line-height:1.85;margin-bottom:24px;}
+.stack-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:24px;}
+.stack-item{background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:12px 14px;display:flex;align-items:flex-start;gap:10px;transition:all .2s;}
+.stack-item:hover{border-color:var(--border2);}
+.stack-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:5px;}
+.stack-name{font-family:'Syne',sans-serif;font-size:12px;font-weight:600;color:var(--text);margin-bottom:2px;}
+.stack-desc{font-size:10px;color:var(--muted);line-height:1.4;}
+.metrics-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:24px 0;}
+.metric{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px;text-align:center;}
+.metric-val{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:var(--accent);line-height:1;margin-bottom:4px;}
+.metric-lbl{font-size:10px;color:var(--muted);letter-spacing:.3px;}
+.flow{display:flex;align-items:center;gap:0;margin:20px 0;overflow-x:auto;padding-bottom:4px;}
+.flow-step{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;text-align:center;flex-shrink:0;min-width:90px;}
+.flow-step .fs-icon{font-size:15px;margin-bottom:6px;}
+.flow-step .fs-name{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;color:var(--text);}
+.flow-step .fs-sub{font-size:9px;color:var(--muted);margin-top:2px;}
+.flow-arrow{color:var(--accent);font-size:11px;padding:0 8px;flex-shrink:0;opacity:.6;}
+.flow-step.hl{border-color:rgba(56,183,255,.3);background:rgba(56,183,255,.06);}
+.flow-step.act{border-color:rgba(244,63,94,.3);background:rgba(244,63,94,.06);}
+.ach{display:flex;gap:12px;padding:11px 0;border-bottom:1px solid var(--border);font-size:12px;color:var(--muted);line-height:1.7;}
+.ach:last-child{border-bottom:none;}
+.ach .blt{color:var(--accent);font-size:9px;margin-top:5px;flex-shrink:0;}
+
+/* WAR ROOM */
+.wr-filters{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:16px;}
+.wr-filter{padding:6px 13px;border-radius:7px;font-size:10px;font-family:'Syne',sans-serif;font-weight:600;letter-spacing:.4px;border:1px solid var(--border);background:var(--surface);color:var(--muted);cursor:none;transition:all .2s;text-transform:uppercase;}
+.wr-filter:hover{border-color:var(--border2);color:var(--text);}
+.wr-filter.active{background:rgba(56,183,255,.1);border-color:rgba(56,183,255,.3);color:var(--accent);}
+.wr-filter[data-sev="critical"].active{background:rgba(244,63,94,.1);border-color:rgba(244,63,94,.3);color:#fb7185;}
+.wr-filter[data-sev="high"].active{background:rgba(251,146,60,.1);border-color:rgba(251,146,60,.3);color:var(--orange);}
+.wr-filter[data-sev="medium"].active{background:rgba(251,191,36,.08);border-color:rgba(251,191,36,.3);color:var(--yellow);}
+.wr-filter[data-sev="low"].active{background:rgba(16,185,129,.08);border-color:rgba(16,185,129,.3);color:var(--accent3);}
+.cases-list{display:flex;flex-direction:column;gap:7px;}
+.ci{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:all .25s;}
+.ci:hover{border-color:var(--border2);}
+.ci.open{border-color:var(--border2);box-shadow:0 0 28px rgba(56,183,255,.05);}
+.ci.hidden{display:none;}
+.ci-btn{display:flex;align-items:center;gap:14px;padding:16px 20px;cursor:none;width:100%;background:none;border:none;color:inherit;text-align:left;position:relative;}
+.ci-btn::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--sev);opacity:0;transition:opacity .2s;}
+.ci.open .ci-btn::before{opacity:1;}
+.ci-num{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:var(--dim);width:26px;flex-shrink:0;}
+.ci-main{flex:1;min-width:0;}
+.ci-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--text);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ci-sum{font-size:10px;color:var(--muted);line-height:1.4;}
+.ci-right{display:flex;align-items:center;gap:9px;flex-shrink:0;}
+.sev-b{font-size:9px;letter-spacing:.7px;padding:3px 7px;border-radius:4px;font-family:'Syne',sans-serif;font-weight:700;border:1px solid;}
+.ci-date{font-size:10px;color:var(--dim);}
+.ci-arr{font-size:11px;color:var(--muted);transition:transform .25s;margin-left:4px;}
+.ci.open .ci-arr{transform:rotate(90deg);color:var(--accent);}
+.ci-body{max-height:0;overflow:hidden;transition:max-height .42s cubic-bezier(.4,0,.2,1);}
+.ci.open .ci-body{max-height:540px;}
+.ci-inner{padding:0 20px 20px 60px;}
+.ci-inner hr{border:none;border-top:1px solid var(--border);margin-bottom:16px;}
+.ci-inner p{font-size:12px;color:var(--muted);line-height:1.9;margin-bottom:14px;}
+.tools-lbl{font-size:9px;letter-spacing:1.4px;text-transform:uppercase;color:var(--dim);margin-bottom:8px;}
+.tools-wrap{display:flex;flex-wrap:wrap;gap:6px;}
+
+/* SKILLS */
+.skills-pills{display:flex;flex-wrap:wrap;gap:7px;}
+.s-pill{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 13px;font-size:11px;color:var(--muted);transition:all .2s;position:relative;overflow:hidden;}
+.s-pill::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(56,183,255,.05),transparent);opacity:0;transition:opacity .2s;}
+.s-pill:hover{border-color:var(--border2);color:var(--text);}
+.s-pill:hover::before{opacity:1;}
+.chart-wrap{height:270px;position:relative;}
+
+/* CERTS */
+.cert-row{display:flex;align-items:center;gap:14px;padding:16px 18px;background:var(--surface);border:1px solid var(--border);border-radius:12px;transition:all .22s;margin-bottom:7px;}
+.cert-row:hover{border-color:var(--border2);transform:translateX(4px);}
+.cert-ico{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+.cert-name{font-family:'Syne',sans-serif;font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px;}
+.cert-org{font-size:10px;color:var(--muted);}
+
+/* CONTACT */
+.contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;}
+.contact-card{background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:22px;display:flex;align-items:center;gap:16px;transition:all .25s;text-decoration:none;color:inherit;}
+.contact-card:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:0 8px 24px var(--shadow);}
+.contact-card:hover .cc-icon{transform:scale(1.1);}
+.cc-icon{width:44px;height:44px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;transition:transform .2s;}
+.cc-label{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px;}
+.cc-sub{font-size:10px;color:var(--muted);}
+.avail-card{background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:28px 32px;display:flex;align-items:center;gap:24px;position:relative;overflow:hidden;margin-bottom:18px;}
+.avail-card::before{content:'';position:absolute;right:-40px;top:-40px;width:180px;height:180px;background:radial-gradient(circle,rgba(16,185,129,.06) 0%,transparent 70%);pointer-events:none;}
+.avail-pulse{width:14px;height:14px;border-radius:50%;background:var(--accent3);flex-shrink:0;animation:pdot 2s ease-in-out infinite;}
+.avail-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--text);margin-bottom:4px;}
+.avail-sub{font-size:12px;color:var(--muted);line-height:1.6;}
+.pdf-btn{display:inline-flex;align-items:center;gap:9px;padding:11px 20px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:9px;color:#fff;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:none;transition:all .25s;letter-spacing:.3px;text-decoration:none;}
+.pdf-btn:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(56,183,255,.3);}
+
+/* FEED */
+.feed-item{display:flex;align-items:flex-start;gap:12px;padding:11px 0;border-bottom:1px solid var(--border);}
+.feed-item:last-child{border-bottom:none;}
+.fdot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:4px;}
+.ftxt{font-family:'Syne',sans-serif;font-size:12px;font-weight:600;color:var(--text);margin-bottom:2px;}
+.fsub{font-size:10px;color:var(--muted);}
+.fdate{font-size:10px;color:var(--dim);flex-shrink:0;margin-left:auto;}
+
+/* LAYOUT */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+.gw{display:grid;grid-template-columns:3fr 2fr;gap:18px;}
+
+/* PARTICLES */
+#particles{position:fixed;inset:0;pointer-events:none;z-index:1;overflow:hidden;}
+.pt{position:absolute;border-radius:50%;background:var(--accent);opacity:0;animation:fup linear infinite;}
+@keyframes fup{0%{opacity:0;transform:translateY(0) translateX(0)}10%{opacity:.4}85%{opacity:.1}100%{opacity:0;transform:translateY(-100vh) translateX(var(--dr));}}
+
+/* MOBILE */
+.mob-bar{display:none;position:fixed;top:0;width:100%;background:rgba(6,10,16,.95);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:13px 18px;z-index:100;justify-content:space-between;align-items:center;}
+[data-theme="light"] .mob-bar{background:rgba(240,244,250,.95);}
+@media(max-width:768px){
+  *{cursor:auto!important;}
+  #cursor,#cursor-ring{display:none;}
+  aside{display:none;}
+  .mob-bar{display:flex;}
+  #app{flex-direction:column;}
+  main{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+  #hero{padding:72px 18px 24px!important;}
+  #hero.collapsed{padding:13px 18px!important;}
+  #sections{padding:0 18px 80px!important;}
+  .stats-grid{grid-template-columns:1fr 1fr;}
+  .g2,.gw,.stack-grid,.metrics-row,.contact-grid{grid-template-columns:1fr;}
+  .ci-inner{padding-left:20px;}
+  .flow{overflow-x:auto;}
+  .avail-card{flex-wrap:wrap;gap:14px;}
+  .avail-card .pdf-btn{margin-left:0!important;}
+}
+</style>
 </head>
-<body class="flex h-screen overflow-hidden">
+<body>
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+<div id="particles"></div>
 
-    <aside class="w-64 bg-slate-900 text-slate-300 hidden md:flex flex-col shadow-xl z-20">
-        <div class="p-6 border-b border-slate-800 flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-xl">NH</div>
-            <div>
-                <h1 class="font-bold text-white">Nicolas Hernanz</h1>
-                <p class="text-xs text-slate-400">Analista SOC / SysAdmin</p>
-            </div>
+<div id="splash">
+  <div class="splash-inner">
+    <div class="sl" id="sl1"><span class="hl">→</span> Iniciando sistema de portafolio...</div>
+    <div class="sl" id="sl2"><span class="ok">[OK]</span> Cargando perfil: <span class="hl">nicolas_hernanz</span></div>
+    <div class="sl" id="sl3"><span class="ok">[OK]</span> Módulo SOC_v2.4 activado</div>
+    <div class="sl" id="sl4"><span class="ok">[OK]</span> 11 incidentes verificados y cargados</div>
+    <div class="sl" id="sl5"><span class="ok">[OK]</span> Stack tecnológico validado</div>
+    <div class="sl" id="sl6"><span class="hl">[→]</span> Autenticación completada — bienvenido</div>
+    <div class="sname glitch" data-text="Nicolas Hernanz" id="sn">Nicolas Hernanz</div>
+    <div class="srole" id="sr">Analista SOC &nbsp;·&nbsp; SysAdmin &nbsp;·&nbsp; Open to Work</div>
+    <div class="sbar" id="sb"><div class="sbar-fill" id="sbf"></div></div>
+  </div>
+</div>
+
+<div id="app">
+
+  <div class="mob-bar">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div class="avatar" style="width:34px;height:34px;font-size:11px">NH</div>
+      <span style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px">Nicolas Hernanz</span>
+    </div>
+    <button onclick="toggleTheme()" style="background:none;border:none;color:var(--muted);font-size:16px;cursor:none"><i class="fa-solid fa-circle-half-stroke"></i></button>
+  </div>
+
+  <aside>
+    <div class="logo-area">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="avatar">NH</div>
+        <div><div class="logo-name">Nicolas Hernanz</div><div class="logo-sub">Analista SOC / SysAdmin</div></div>
+      </div>
+    </div>
+    <div class="nav-lbl">Navegación</div>
+    <button class="nav-item active" onclick="navTo('overview')"><i class="fa-solid fa-chart-line"></i> Resumen</button>
+    <button class="nav-item" onclick="navTo('projects')"><i class="fa-solid fa-rocket"></i> Proyectos</button>
+    <button class="nav-item" onclick="navTo('war-room')"><i class="fa-solid fa-shield-virus"></i> War Room <span class="nav-count">11</span></button>
+    <button class="nav-item" onclick="navTo('skills')"><i class="fa-solid fa-layer-group"></i> Stack</button>
+    <button class="nav-item" onclick="navTo('roadmap')"><i class="fa-solid fa-graduation-cap"></i> Formación</button>
+    <button class="nav-item" onclick="navTo('contact')"><i class="fa-solid fa-paper-plane"></i> Contacto</button>
+    <div style="flex:1"></div>
+    <button class="theme-btn" onclick="toggleTheme()">
+      <i class="fa-solid fa-circle-half-stroke" style="font-size:12px"></i>
+      <span id="theme-lbl">Modo Oscuro</span>
+      <div class="toggle-track on" id="toggle-track"><div class="toggle-thumb"></div></div>
+    </button>
+    <div class="sidebar-footer">
+      <div class="sf-lbl">Estado</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><div class="sf-dot"></div><span class="sf-title">Open to Work</span></div>
+      <div class="sf-sub">Roles SOC · Remoto</div>
+      <div class="sf-links">
+        <a href="https://www.linkedin.com/in/nicolas-hernanz-ba2846255/" target="_blank" class="sf-link"><i class="fa-brands fa-linkedin"></i></a>
+        <a href="https://nicolashernanz.github.io/Portfolio2025/" target="_blank" class="sf-link"><i class="fa-brands fa-github"></i></a>
+        <a href="CV_Nicolas_Hernanz.pdf" download class="sf-link"><i class="fa-solid fa-file-arrow-down"></i></a>
+      </div>
+    </div>
+  </aside>
+
+  <main id="main-scroll">
+    <div id="hero-wrap">
+      <div id="hero">
+        <div class="hero-sub">// Portafolio · Analista de Seguridad</div>
+        <div class="hero-name-row">
+          <h1 class="hero-big glitch" data-text="Nicolas Hernanz">Nicolas Hernanz</h1>
+          <div class="hero-meta">
+            <span style="color:var(--accent)">SOC Analyst</span>
+            <div class="h-sep"></div>
+            <span>M365 · FortiGate · EDR</span>
+            <div class="h-sep"></div>
+            <span style="color:var(--accent3)">● Open to Work</span>
+          </div>
         </div>
-        
-        <nav class="flex-1 py-6 space-y-1">
-            <button onclick="renderView('overview')" id="nav-overview" class="nav-item w-full flex items-center gap-3 px-6 py-3 hover:bg-slate-800 hover:text-white transition-colors text-sm font-medium active">
-                <i class="fa-solid fa-chart-line w-5"></i> Resumen General
-            </button>
-            <button onclick="renderView('projects')" id="nav-projects" class="nav-item w-full flex items-center gap-3 px-6 py-3 hover:bg-slate-800 hover:text-white transition-colors text-sm font-medium">
-                <i class="fa-solid fa-rocket w-5"></i> Proyectos Destacados
-            </button>
-            <button onclick="renderView('war-room')" id="nav-war-room" class="nav-item w-full flex items-center gap-3 px-6 py-3 hover:bg-slate-800 hover:text-white transition-colors text-sm font-medium">
-                <i class="fa-solid fa-shield-virus w-5"></i> War Room (Casos)
-            </button>
-            <button onclick="renderView('skills')" id="nav-skills" class="nav-item w-full flex items-center gap-3 px-6 py-3 hover:bg-slate-800 hover:text-white transition-colors text-sm font-medium">
-                <i class="fa-solid fa-layer-group w-5"></i> Stack Tecnológico
-            </button>
-            <button onclick="renderView('roadmap')" id="nav-roadmap" class="nav-item w-full flex items-center gap-3 px-6 py-3 hover:bg-slate-800 hover:text-white transition-colors text-sm font-medium">
-                <i class="fa-solid fa-graduation-cap w-5"></i> Formación y Certs
-            </button>
-        </nav>
-
-        <div class="p-6 border-t border-slate-800">
-            <div class="bg-slate-800 rounded-lg p-4">
-                <p class="text-xs text-slate-400 mb-2">Estado Actual</p>
-                <div class="flex items-center gap-2">
-                    <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                    <span class="text-sm font-bold text-white">Open to Work</span>
-                </div>
-                <p class="text-xs text-slate-500 mt-1">Buscando roles SOC Remoto</p>
-            </div>
+        <div class="hero-desc">Profesional de TI en transición hacia Analista SOC. Combino la experiencia operativa de un Administrador de Sistemas (VMWare, M365, Redes) con la mentalidad analítica de seguridad. Especializado en detección proactiva de amenazas, análisis forense de logs y respuesta a incidentes en entornos híbridos.</div>
+        <div class="hero-tags">
+          <span class="tag ta"><i class="fa-solid fa-shield-halved"></i> SOC Analyst</span>
+          <span class="tag td"><i class="fa-brands fa-microsoft"></i> M365 / Entra ID</span>
+          <span class="tag td"><i class="fa-solid fa-network-wired"></i> FortiGate</span>
+          <span class="tag td"><i class="fa-solid fa-server"></i> VMWare vSphere</span>
+          <span class="tag tg"><i class="fa-solid fa-circle"></i> Open to Work — SOC Remoto</span>
         </div>
-    </aside>
-
-    <div class="md:hidden fixed top-0 w-full bg-slate-900 text-white z-50 p-4 flex justify-between items-center shadow-md">
-        <span class="font-bold">Nicolas Hernanz</span>
-        <button id="mobile-menu-btn" class="text-slate-300"><i class="fa-solid fa-bars"></i></button>
+      </div>
     </div>
 
-    <main class="flex-1 overflow-y-auto bg-slate-50 p-4 md:p-8 pt-20 md:pt-8 relative">
-        <div id="content-area" class="max-w-6xl mx-auto">
+    <div id="sections">
+
+      <!-- OVERVIEW -->
+      <div class="section-block" id="sec-overview">
+        <div class="sec-lbl"><span>//</span> Resumen General</div>
+        <div class="stats-grid">
+          <div class="stat-card red scanline"><div class="stat-bg">11</div><div class="stat-ic"><i class="fa-solid fa-fire-extinguisher"></i></div><div class="stat-v">11+</div><div class="stat-l">Incidentes Resueltos</div></div>
+          <div class="stat-card blue scanline"><div class="stat-bg">300</div><div class="stat-ic"><i class="fa-solid fa-users"></i></div><div class="stat-v">300</div><div class="stat-l">Usuarios Gestionados</div></div>
+          <div class="stat-card green scanline"><div class="stat-bg">2s</div><div class="stat-ic"><i class="fa-solid fa-bolt"></i></div><div class="stat-v">&lt;2s</div><div class="stat-l">Respuesta Automática</div></div>
+          <div class="stat-card purple scanline"><div class="stat-bg">ISO</div><div class="stat-ic"><i class="fa-solid fa-clipboard-check"></i></div><div class="stat-v">ISO</div><div class="stat-l">Auditoría 27001</div></div>
+        </div>
+        <div class="gw" style="margin-top:16px">
+          <div class="card scanline">
+            <div class="sec-lbl" style="margin-bottom:14px"><span>//</span> Actividad Reciente</div>
+            <div id="feed-list"></div>
+            <button onclick="navTo('war-room')" style="margin-top:12px;font-size:11px;color:var(--accent);background:none;border:none;cursor:none;padding:0;font-family:'JetBrains Mono',monospace;display:flex;align-items:center;gap:6px">Ver todos los casos <i class="fa-solid fa-arrow-right" style="font-size:9px"></i></button>
+          </div>
+          <div class="card scanline">
+            <div class="sec-lbl" style="margin-bottom:14px"><span>//</span> Skill Level</div>
+            <div id="bars"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PROJECTS -->
+      <div class="section-block" id="sec-projects">
+        <div class="sec-lbl"><span>//</span> Proyectos Destacados</div>
+        <div class="project-card scanline">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:6px">
+            <div><div class="proj-title">SOC Automatizado con Respuesta Activa</div><div class="proj-sub">Lab Personal — Detección, enriquecimiento y aislamiento automático en menos de 2 segundos</div></div>
+            <span class="tag tg"><i class="fa-solid fa-circle"></i> En Producción</span>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:22px">
+            <span class="tag ta">Wazuh 4.9.0</span><span class="tag ta">Sysmon v15</span><span class="tag ta">Python 3.11 SOAR</span><span class="tag ta">VirusTotal API v3</span><span class="tag ta">Docker</span><span class="tag ta">Osquery</span><span class="tag ta">SQLite</span>
+          </div>
+          <p class="proj-desc">Diseño, despliegue y operación completa de un SOC funcional sobre infraestructura propia, con capacidad de detección y respuesta automática a amenazas en tiempo real. A diferencia de la mayoría de SOCs accesibles para pymes —limitados a detección pasiva— este sistema cierra el ciclo completo: <strong>detecta, enriquece, decide y actúa.</strong></p>
+
+          <div class="sec-lbl" style="margin-bottom:14px"><span>//</span> Resultado Validado en Laboratorio</div>
+          <div class="metrics-row">
+            <div class="metric"><div class="metric-val">&lt;2s</div><div class="metric-lbl">Ejecución → Aislamiento</div></div>
+            <div class="metric"><div class="metric-val">65/67</div><div class="metric-lbl">Detecciones EICAR en VT</div></div>
+            <div class="metric"><div class="metric-val">0</div><div class="metric-lbl">Intervención Humana</div></div>
+          </div>
+
+          <div class="sec-lbl" style="margin-bottom:14px"><span>//</span> Flujo de Detección Automática</div>
+          <div class="flow">
+            <div class="flow-step"><div class="fs-icon">🖥️</div><div class="fs-name">Endpoint</div><div class="fs-sub">Proceso ejecutado</div></div>
+            <div class="flow-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+            <div class="flow-step hl"><div class="fs-icon"><i class="fa-solid fa-eye" style="color:var(--accent)"></i></div><div class="fs-name">Sysmon v15</div><div class="fs-sub">Hash SHA256</div></div>
+            <div class="flow-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+            <div class="flow-step hl"><div class="fs-icon"><i class="fa-solid fa-database" style="color:var(--accent)"></i></div><div class="fs-name">Wazuh SIEM</div><div class="fs-sub">Recepción evento</div></div>
+            <div class="flow-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+            <div class="flow-step hl"><div class="fs-icon"><i class="fa-solid fa-code" style="color:var(--accent2)"></i></div><div class="fs-name">SOAR Engine</div><div class="fs-sub">Python propio</div></div>
+            <div class="flow-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+            <div class="flow-step"><div class="fs-icon">🔬</div><div class="fs-name">VirusTotal</div><div class="fs-sub">+ Caché SQLite</div></div>
+            <div class="flow-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+            <div class="flow-step act"><div class="fs-icon"><i class="fa-solid fa-plug-circle-xmark" style="color:var(--red)"></i></div><div class="fs-name">Aislamiento</div><div class="fs-sub">Active Response</div></div>
+          </div>
+
+          <div class="sec-lbl" style="margin-bottom:14px;margin-top:8px"><span>//</span> Stack Técnico</div>
+          <div class="stack-grid">
+            <div class="stack-item"><div class="stack-dot"></div><div><div class="stack-name">Wazuh 4.9.0 — SIEM/EDR Central</div><div class="stack-desc">Stack de 3 contenedores Docker: Manager, Indexer, Dashboard</div></div></div>
+            <div class="stack-item"><div class="stack-dot"></div><div><div class="stack-name">Sysmon v15 — Telemetría Profunda</div><div class="stack-desc">Config. personalizada: procesos, hashes SHA256, conexiones, registro, DLLs</div></div></div>
+            <div class="stack-item"><div class="stack-dot" style="background:var(--accent2)"></div><div><div class="stack-name">SOAR Engine Python 3.11 — Propio</div><div class="stack-desc">Motor de respuesta sin dependencia de plataformas externas</div></div></div>
+            <div class="stack-item"><div class="stack-dot" style="background:var(--accent2)"></div><div><div class="stack-name">VirusTotal API v3 + SQLite</div><div class="stack-desc">Enriquecimiento en tiempo real con caché local para optimizar rate limits</div></div></div>
+            <div class="stack-item"><div class="stack-dot" style="background:var(--accent3)"></div><div><div class="stack-name">Osquery — DFIR & Visibilidad</div><div class="stack-desc">Estado del sistema y visibilidad forense bajo demanda</div></div></div>
+            <div class="stack-item"><div class="stack-dot" style="background:var(--accent3)"></div><div><div class="stack-name">FIM + Docker + Shell Scripting</div><div class="stack-desc">Monitorización de rutas críticas y despliegue reproducible automatizado</div></div></div>
+          </div>
+
+          <div class="sec-lbl" style="margin-bottom:14px;margin-top:8px"><span>//</span> Kit de Despliegue para Producción</div>
+          <div class="ach"><span class="blt"><i class="fa-solid fa-arrow-right"></i></span><span><strong>Imágenes Docker offline en USB</strong> — despliegue en servidores sin acceso a internet.</span></div>
+          <div class="ach"><span class="blt"><i class="fa-solid fa-arrow-right"></i></span><span><strong>Script de instalación automatizado</strong> con SSL pre-generado y documentación técnica incluida.</span></div>
+          <div class="ach"><span class="blt"><i class="fa-solid fa-arrow-right"></i></span><span><strong>Tiempo de despliegue reducido</strong> de 2-3 horas (estándar) a <strong>30-45 minutos</strong> en entornos sin experiencia previa.</span></div>
+          <div class="ach"><span class="blt"><i class="fa-solid fa-arrow-right"></i></span><span><strong>SOAR 100% propio:</strong> control total sobre la lógica de respuesta y cero costes de licencia.</span></div>
+        </div>
+      </div>
+
+      <!-- WAR ROOM -->
+      <div class="section-block" id="sec-war-room">
+        <div class="sec-lbl"><span>//</span> War Room · Casos Reales</div>
+        <div class="wr-filters">
+          <button class="wr-filter active" data-sev="all" onclick="filterCases('all')">Todos (11)</button>
+          <button class="wr-filter" data-sev="critical" onclick="filterCases('critical')">Crítico</button>
+          <button class="wr-filter" data-sev="high" onclick="filterCases('high')">Alto</button>
+          <button class="wr-filter" data-sev="medium" onclick="filterCases('medium')">Medio</button>
+          <button class="wr-filter" data-sev="low" onclick="filterCases('low')">Bajo</button>
+        </div>
+        <div class="cases-list" id="cases-list"></div>
+      </div>
+
+      <!-- SKILLS -->
+      <div class="section-block" id="sec-skills">
+        <div class="sec-lbl"><span>//</span> Stack Tecnológico</div>
+        <div class="g2" style="margin-bottom:14px">
+          <div class="card">
+            <div class="sec-lbl" style="margin-bottom:12px"><span>//</span> Seguridad</div>
+            <div class="skills-pills">
+              <span class="s-pill">Microsoft Defender EDR</span><span class="s-pill">Fortinet FortiGate</span>
+              <span class="s-pill">Incident Response</span><span class="s-pill">Threat Hunting</span>
+              <span class="s-pill">Forensics Basics</span><span class="s-pill">Wazuh SIEM/EDR</span><span class="s-pill">ANY.RUN</span>
             </div>
-    </main>
+          </div>
+          <div class="card">
+            <div class="sec-lbl" style="margin-bottom:12px"><span>//</span> Sistemas</div>
+            <div class="skills-pills">
+              <span class="s-pill">Windows Server AD/DNS</span><span class="s-pill">Linux (Ubuntu/CentOS)</span>
+              <span class="s-pill">VMWare vSphere</span><span class="s-pill">Microsoft 365</span>
+              <span class="s-pill">Entra ID</span><span class="s-pill">Intune</span>
+            </div>
+          </div>
+        </div>
+        <div class="card scanline">
+          <div class="sec-lbl" style="margin-bottom:14px"><span>//</span> Distribución de Competencias</div>
+          <div class="chart-wrap"><canvas id="radarChart"></canvas></div>
+        </div>
+      </div>
 
-    <script>
-        // --- DATA STORE ---
-        const profileData = {
-            summary: {
-                title: "Técnico de Sistemas y Seguridad",
-                description: "Profesional de TI en transición hacia Analista SOC. Combino la experiencia operativa de un Administrador de Sistemas (VMWare, M365, Redes) con la mentalidad analítica de seguridad. Especializado en detección proactiva de amenazas, análisis forense de logs y respuesta a incidentes en entornos híbridos.",
-                stats: [
-                    // ACTUALIZADO: Cambiado de "8+" a "11+" para reflejar el nuevo caso
-                    { value: "11+", label: "Incidentes Mayores Resueltos", icon: "fa-fire-extinguisher", color: "text-red-500" },
-                    { value: "300", label: "Usuarios Gestionados", icon: "fa-users", color: "text-blue-500" },
-                    { value: "100%", label: "Disponibilidad Remota", icon: "fa-laptop-house", color: "text-green-500" },
-                    { value: "ISO", label: "Auditoría 27001", icon: "fa-clipboard-check", color: "text-purple-500" }
-                ]
-            },
-            // NEW: Projects Data
-            projects: [
-                {
-                    id: "soc-impl",
-                    title: "Arquitectura SOCaaS & Defensa Activa",
-                    subtitle: "Diseño, Despliegue y Orquestación para 250 Endpoints",
-                    tags: ["Wazuh XDR", "Sysmon", "Velociraptor", "Python/SOAR", "Docker"],
-                    description: "Transformación de una postura de seguridad reactiva a una arquitectura de Defensa Activa. Implementación completa de un stack de seguridad Open Source para monitorización, detección y respuesta automatizada.",
-                    achievements: [
-                        "<strong>Visibilidad Granular:</strong> Despliegue masivo de agentes Wazuh y Sysmon (SwiftOnSecurity) vía GPO para eliminar puntos ciegos.",
-                        "<strong>Respuesta Automatizada (SOAR):</strong> Desarrollo de scripts en Python para integrar la API de Wazuh con Velociraptor, permitiendo la recolección de evidencia forense en segundos tras una alerta crítica.",
-                        "<strong>Reducción de Ruido:</strong> Tuning de reglas y exclusiones basado en línea base negativa, reduciendo la fatiga de alertas en un 95%.",
-                        "<strong>Reporting Ejecutivo:</strong> Automatización de informes de KPIs de seguridad para dirección."
-                    ],
-                    status: "En Producción"
-                }
-            ],
-            cases: [
-                {
-                    id: "rovnix",
-                    title: "Incidente Troyano Rovnix",
-                    tag: "Threat Hunting / EDR",
-                    date: "Sep 2025",
-                    summary: "Detección proactiva de un 'Dropper' que evadió alertas críticas iniciales.",
-                    details: "Detecté actividad anómala en un endpoint que Microsoft Defender había bloqueado parcialmente pero no alertado como crítico. Investigando el árbol de procesos, identifiqué un 'Dropper' (Rovnix) descargado por el usuario. Localicé un servidor interno infectado que actuaba como origen secundario. Aislé el host, limpié el servidor y evité el despliegue del payload final (Ransomware/Spyware).",
-                    tools: ["Microsoft Defender", "KQL", "FortiGate"]
-                },
-                {
-                    id: "chatgpt",
-                    title: "Investigación Forense ChatGPT",
-                    tag: "Forensic / Logs",
-                    date: "Oct 2025",
-                    summary: "Atribución de actividad de usuario en aplicación sin auditoría nativa.",
-                    details: "Se requería identificar qué usuario realizó una acción en una cuenta compartida de ChatGPT. Al no existir logs de usuario en la app, utilicé las herramientas de desarrollador (F12) para extraer el timestamp exacto y el ID de dispositivo. Correlacioné este timestamp con los logs de tráfico web del firewall FortiGate para identificar la IP de origen y el usuario de Active Directory responsable.",
-                    tools: ["Browser DevTools", "FortiGate Logs", "Correlation"]
-                },
-                {
-                    id: "confluence",
-                    title: "Caída Servicio Confluence",
-                    tag: "Network / Troubleshooting",
-                    date: "Oct 2025",
-                    summary: "Diagnóstico de fallo de enrutamiento de Capa 3 en arquitectura DMZ.",
-                    details: "Tras la caída de un servicio crítico, descarté problemas de aplicación (Capa 7) y firewall local. Utilizando pruebas de conectividad (ping, curl) identifiqué un error 'Destination Host Unreachable' desde el Proxy Apache hacia el Backend. Diagnostiqué correctamente la caída de una ruta VPN estática entre la DMZ y la red de servidores, permitiendo la restauración del servicio.",
-                    tools: ["Linux CLI", "Ping/Curl", "VMWare", "Networking"]
-                },
-                {
-                    id: "pdf-evasion",
-                    title: "Phishing Evasivo: Factura CFDI",
-                    tag: "Malware Analysis / Evasión",
-                    date: "Nov 2025",
-                    summary: "Detección manual de PDF cifrado con Geofencing que evadía Sandbox.",
-                    details: "Investigación de una supuesta factura urgente. El análisis dinámico en Any.Run dio 'Falso Negativo' (Verde) debido a que el servidor atacante bloqueaba IPs de Sandbox (Geofencing/Cloudflare). Realicé análisis estático manual (Bloc de Notas) revelando generación automática (TCPDF) y el uso del parámetro '/Encrypt' para ocultar URLs. Confirmé que el archivo solicitaba contraseña al abrirse, una técnica clásica para cegar a los antivirus. Se extrajeron los IOCs y se bloqueó el dominio.",
-                    tools: ["Static Analysis", "Notepad", "Any.Run", "Defense Evasion"]
-                },
-                {
-                    id: "inetum",
-                    title: "Análisis Phishing/BEC",
-                    tag: "Malware Analysis / Sandbox",
-                    date: "Oct 2025",
-                    summary: "Análisis de adjunto sospechoso (.eml) en Sandbox ANY.RUN.",
-                    details: "Usuario reportó correo sospechoso de proveedor legítimo con formato inusual. Ejecuté el adjunto en entorno aislado (ANY.RUN). El análisis técnico confirmó que el fichero era benigno (sin procesos hijos maliciosos ni conexiones C2), pero identifiqué un alto riesgo de fraude de negocio (BEC). Asesoré al usuario para validar el pedido por canal alternativo, previniendo un posible fraude financiero.",
-                    tools: ["ANY.RUN", "Sandbox", "Risk Assessment"]
-                },
-                {
-                    id: "krebshell",
-                    title: "Falso Positivo Webshell",
-                    tag: "Incident Response",
-                    date: "Nov 2025",
-                    summary: "Validación de 'Intención Benigna' en alerta de seguridad crítica.",
-                    details: "Alerta de Defender sobre 'Backdoor:PHP/Krebshell'. Inicié protocolo de contención aislando el host. La investigación reveló que no había persistencia en registro ni servidor web activo. El análisis de contexto identificó al usuario como personal de seguridad realizando pruebas. Clasificado como 'True Positive / Benign Intent' y restaurado el servicio.",
-                    tools: ["Live Response", "Registry Analysis", "Context"]
-                },
-                {
-                    id: "bf-identity",
-                    title: "Compromiso de Identidad (Black Friday)",
-                    tag: "Identity / Phishing",
-                    date: "Nov 2025",
-                    summary: "Contención de ataque de 'Credential Harvesting' con múltiples usuarios comprometidos.",
-                    details: "Detección de campaña de Phishing masiva suplantando ofertas de Black Friday dirigida a Ventas. Dos usuarios introdujeron credenciales corporativas. Se detectaron inicios de sesión de riesgo (Impossible Travel) en Entra ID. Se ejecutó respuesta inmediata: Aislamiento de dispositivos vía Intune, revocación de tokens de sesión (Revoke-SPOUserSession), reseteo forzado de contraseñas y análisis forense con Live Response para descartar persistencia (Scheduled Tasks/Run Keys).",
-                    tools: ["Entra ID (Azure AD)", "Intune", "Defender Live Response", "KQL"]
-                },
-                {
-                    id: "ps-obfuscated",
-                    title: "Ejecución PowerShell Malicioso",
-                    tag: "Endpoint / Malware Analysis",
-                    date: "Dec 2025",
-                    summary: "Interrupción de 'Loader' malicioso basado en scripts ofuscados.",
-                    details: "Alerta crítica de EDR: 'Suspicious PowerShell Command Line'. Un usuario ejecutó una supuesta 'Felicitación Navideña.js'. El script lanzó una instancia oculta de PowerShell con comandos codificados en Base64. Realicé la decodificación manual del script, revelando un intento de descarga (DownloadString) desde un dominio C2 externo. El EDR bloqueó la ejecución (AMSI), pero procedí a aislar el host y bloquear el dominio e IP en el Firewall perimetral preventivamente.",
-                    tools: ["Defender for Endpoint", "PowerShell Decoding", "AMSI", "Firewalling"]
-                },
-                {
-                    id: "shadow-it-risk",
-                    title: "Mitigación Riesgo Crítico (Shadow IT)",
-                    tag: "Vuln. Mgmt / Hardening",
-                    date: "Jan 2026",
-                    summary: "Neutralización de vector de ataque crítico: Activo legacy con riesgo de Credential Dumping.",
-                    details: "Detección proactiva mediante Defender TVM de un dispositivo no gestionado con severidad crítica (+100 vulnerabilidades CVE altas). El activo almacenaba credenciales en caché de una cuenta con privilegios elevados, exponiendo a la organización a técnicas de 'Credential Dumping' y desplazamiento lateral. Se ejecutó un plan de remediación: migración de datos críticos a SharePoint, revocación de credenciales expuestas y decomiso definitivo del hardware, eliminando el riesgo de compromiso del dominio.",
-                    tools: ["Defender TVM", "Credential Guard", "Risk Assessment", "Shadow IT Remediation"]
-                },
-                {
-                    id: "ceo-phishing",
-                    title: "Investigación Phishing C-Level",
-                    tag: "Threat Intel / Social Eng.",
-                    date: "Dec 2025",
-                    summary: "Descarte de malware en campaña de suplantación dirigida a directivos.",
-                    details: "Investigación de Spear Phishing (suplantación de Isaac Guerra). Se analizó el .eml en ANY.RUN revisando IOCs y tráfico HTTP. Se investigó una alerta de Suricata (Microsoft Dr. Watson) determinando que era un Falso Positivo asociado a telemetría legítima y no a tráfico C2. Confirmada la ausencia de payload o ejecución maliciosa en Outlook, se reclasificó como Ingeniería Social pura. Se aplicó bloqueo de remitente y 'Píldora de Advertencia' al usuario.",
-                    tools: ["ANY.RUN", "Suricata IDS", "Traffic Analysis", "Email Header Analysis"]
-                },
-                // NUEVO CASO AÑADIDO AQUI
-                {
-                    id: "sharepoint-aitm",
-                    title: "Compromiso SharePoint (AiTM)",
-                    tag: "Cloud Security / IR",
-                    date: "Jan 2026",
-                    summary: "Contención de ataque de Phishing masivo propagado vía SharePoint legítimo.",
-                    details: "Investigación de envío masivo de correos (389 destinatarios) desde cuenta comprometida. El atacante (IP 128.90.161.6) evadió MFA, subió un archivo malicioso (.aspx) y usó la función nativa 'Compartir' para evadir filtros. Realicé análisis forense en Purview para trazar la intrusión, revoqué sesiones, eliminé el artefacto y desplegué bloqueo de IP mediante Acceso Condicional en Entra ID.",
-                    tools: ["Entra ID", "Purview Audit", "SharePoint Admin", "FortiGate"]
-                }
-            ],
-            skills: {
-                security: ["Microsoft Defender EDR", "Fortinet FortiGate", "Incident Response", "Threat Hunting", "Forensics Basics", "Wazuh (Lab)", "ANY.RUN"],
-                systems: ["Windows Server AD/DNS", "Linux (Ubuntu/CentOS)", "VMWare vSphere", "Microsoft 365", "Entra ID", "Intune"],
-                soft: ["Pensamiento Crítico", "Comunicación Técnica", "Inglés Técnico (Lectura)", "Resolución de Problemas"]
-            },
-            certs: [
-                { title: "CCNAv7: Switching, Routing, Wireless", org: "Cisco", status: "Completado" },
-                { title: "CyberOps Associate", org: "Cisco", status: "Completado" },
-                { title: "Técnico Superior ASIR", org: "Formación Profesional", status: "En Curso (Nota media 8.5)" },
-                { title: "Microsoft SC-200", org: "Microsoft", status: "Objetivo Q1 2026" },
-                { title: "Fortinet FCP Security", org: "Fortinet", status: "En Proceso" }
-            ]
-        };
+      <!-- ROADMAP -->
+      <div class="section-block" id="sec-roadmap">
+        <div class="sec-lbl"><span>//</span> Formación &amp; Certificaciones</div>
+        <div id="certs-list"></div>
+      </div>
 
-        // --- RENDER FUNCTIONS ---
+      <!-- CONTACT -->
+      <div class="section-block" id="sec-contact">
+        <div class="sec-lbl"><span>//</span> Contacto</div>
+        <div class="avail-card">
+          <div class="avail-pulse"></div>
+          <div style="flex:1">
+            <div class="avail-title">Disponible para nuevas oportunidades</div>
+            <div class="avail-sub">Buscando roles de Analista SOC en modalidad remota. Respondo en menos de 24h.</div>
+          </div>
+          <a href="CV_Nicolas_Hernanz.pdf" download class="pdf-btn" style="margin-left:auto;flex-shrink:0">
+            <i class="fa-solid fa-file-arrow-down"></i> Descargar CV
+          </a>
+        </div>
+        <div class="contact-grid">
+          <a href="https://www.linkedin.com/in/nicolas-hernanz-ba2846255/" target="_blank" class="contact-card">
+            <div class="cc-icon" style="background:rgba(10,102,194,.12)"><i class="fa-brands fa-linkedin" style="color:#0a66c2"></i></div>
+            <div><div class="cc-label">LinkedIn</div><div class="cc-sub">nicolas-hernanz-ba2846255</div></div>
+            <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:11px;color:var(--dim);margin-left:auto"></i>
+          </a>
+          <a href="https://nicolashernanz.github.io/Portfolio2025/" target="_blank" class="contact-card">
+            <div class="cc-icon" style="background:rgba(255,255,255,.05)"><i class="fa-brands fa-github" style="color:var(--text)"></i></div>
+            <div><div class="cc-label">GitHub / Portfolio</div><div class="cc-sub">nicolashernanz.github.io/Portfolio2025</div></div>
+            <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:11px;color:var(--dim);margin-left:auto"></i>
+          </a>
+          <a href="/cdn-cgi/l/email-protection#d5bbbdb6b0b9b0b8bcbbec95b2b8b4bcb9fbb6bab8" class="contact-card">
+            <div class="cc-icon" style="background:rgba(56,183,255,.1)"><i class="fa-solid fa-envelope" style="color:var(--accent)"></i></div>
+            <div><div class="cc-label">Email</div><div class="cc-sub"><span class="__cf_email__" data-cfemail="57393f34323b323a3e396e17303a363e3b7934383a">[email&#160;protected]</span></div></div>
+            <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:11px;color:var(--dim);margin-left:auto"></i>
+          </a>
+          <div class="contact-card">
+            <div class="cc-icon" style="background:rgba(16,185,129,.1)"><i class="fa-solid fa-location-dot" style="color:var(--accent3)"></i></div>
+            <div><div class="cc-label">Ubicación</div><div class="cc-sub">Gijón, Asturias · Disponible remotamente</div></div>
+          </div>
+        </div>
+      </div>
 
-        function renderOverview() {
-            const statsHtml = profileData.summary.stats.map(stat => `
-                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
-                    <div class="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center text-xl ${stat.color}">
-                        <i class="fa-solid ${stat.icon}"></i>
-                    </div>
-                    <div>
-                        <p class="text-2xl font-bold text-slate-800">${stat.value}</p>
-                        <p class="text-xs text-slate-500 uppercase tracking-wide font-semibold">${stat.label}</p>
-                    </div>
-                </div>
-            `).join('');
+    </div>
+  </main>
+</div>
 
-            return `
-                <div class="animate-fade-in space-y-8">
-                    <div class="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm relative overflow-hidden">
-                        <div class="absolute top-0 right-0 w-64 h-64 bg-blue-50 rounded-full -mr-16 -mt-16 opacity-50 pointer-events-none"></div>
-                        <div class="relative z-10">
-                            <h2 class="text-3xl md:text-4xl font-bold text-slate-800 mb-2">Hola, soy Nicolas</h2>
-                            <h3 class="text-xl text-blue-600 font-medium mb-4">${profileData.summary.title}</h3>
-                            <p class="text-slate-600 max-w-3xl leading-relaxed text-lg">${profileData.summary.description}</p>
-                            
-                            <div class="mt-6 flex flex-wrap gap-3">
-                                <span class="px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-sm font-medium border border-slate-200">Fortinet</span>
-                                <span class="px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-sm font-medium border border-slate-200">Microsoft Defender</span>
-                                <span class="px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-sm font-medium border border-slate-200">VMWare</span>
-                                <span class="px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-sm font-medium border border-slate-200">Wazuh</span>
-                            </div>
-                        </div>
-                    </div>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+const cases=[
+  {id:"rovnix",title:"Incidente Troyano Rovnix",tag:"Threat Hunting / EDR",date:"Sep 2025",severity:"high",summary:"Detección proactiva de un 'Dropper' que evadió alertas críticas iniciales.",details:"Detecté actividad anómala en un endpoint que Microsoft Defender había bloqueado parcialmente pero no alertado como crítico. Investigando el árbol de procesos, identifiqué un 'Dropper' (Rovnix) descargado por el usuario. Localicé un servidor interno infectado que actuaba como origen secundario. Aislé el host, limpié el servidor y evité el despliegue del payload final (Ransomware/Spyware).",tools:["Microsoft Defender","KQL","FortiGate"]},
+  {id:"chatgpt",title:"Investigación Forense ChatGPT",tag:"Forensic / Logs",date:"Oct 2025",severity:"medium",summary:"Atribución de actividad de usuario en aplicación sin auditoría nativa.",details:"Se requería identificar qué usuario realizó una acción en una cuenta compartida de ChatGPT. Al no existir logs de usuario en la app, utilicé las herramientas de desarrollador (F12) para extraer el timestamp exacto y el ID de dispositivo. Correlacioné este timestamp con los logs de tráfico web del firewall FortiGate para identificar la IP de origen y el usuario de Active Directory responsable.",tools:["Browser DevTools","FortiGate Logs","Correlation"]},
+  {id:"confluence",title:"Caída Servicio Confluence",tag:"Network / Troubleshooting",date:"Oct 2025",severity:"medium",summary:"Diagnóstico de fallo de enrutamiento de Capa 3 en arquitectura DMZ.",details:"Tras la caída de un servicio crítico, descarté problemas de aplicación (Capa 7) y firewall local. Utilizando pruebas de conectividad (ping, curl) identifiqué un error 'Destination Host Unreachable' desde el Proxy Apache hacia el Backend. Diagnostiqué correctamente la caída de una ruta VPN estática entre la DMZ y la red de servidores.",tools:["Linux CLI","Ping/Curl","VMWare","Networking"]},
+  {id:"pdf-evasion",title:"Phishing Evasivo: Factura CFDI",tag:"Malware Analysis / Evasión",date:"Nov 2025",severity:"high",summary:"Detección manual de PDF cifrado con Geofencing que evadía Sandbox.",details:"Investigación de una supuesta factura urgente. El análisis dinámico en Any.Run dio 'Falso Negativo' (Verde) debido a que el servidor atacante bloqueaba IPs de Sandbox (Geofencing/Cloudflare). Realicé análisis estático manual (Bloc de Notas) revelando generación automática (TCPDF) y el parámetro '/Encrypt' para ocultar URLs. Técnica clásica para cegar a los antivirus. Se extrajeron los IOCs y se bloqueó el dominio.",tools:["Static Analysis","Notepad","Any.Run","Defense Evasion"]},
+  {id:"inetum",title:"Análisis Phishing/BEC",tag:"Malware Analysis / Sandbox",date:"Oct 2025",severity:"medium",summary:"Análisis de adjunto sospechoso (.eml) en Sandbox ANY.RUN.",details:"Usuario reportó correo sospechoso de proveedor legítimo con formato inusual. Ejecuté el adjunto en entorno aislado (ANY.RUN). El análisis técnico confirmó que el fichero era benigno, pero identifiqué un alto riesgo de fraude de negocio (BEC). Asesoré al usuario para validar el pedido por canal alternativo, previniendo un posible fraude financiero.",tools:["ANY.RUN","Sandbox","Risk Assessment"]},
+  {id:"krebshell",title:"Falso Positivo Webshell",tag:"Incident Response",date:"Nov 2025",severity:"low",summary:"Validación de 'Intención Benigna' en alerta de seguridad crítica.",details:"Alerta de Defender sobre 'Backdoor:PHP/Krebshell'. Inicié protocolo de contención aislando el host. La investigación reveló que no había persistencia en registro ni servidor web activo. El análisis de contexto identificó al usuario como personal de seguridad realizando pruebas. Clasificado como 'True Positive / Benign Intent'.",tools:["Live Response","Registry Analysis","Context"]},
+  {id:"bf-identity",title:"Compromiso de Identidad (Black Friday)",tag:"Identity / Phishing",date:"Nov 2025",severity:"high",summary:"Contención de ataque de 'Credential Harvesting' con múltiples usuarios comprometidos.",details:"Detección de campaña de Phishing masiva suplantando ofertas de Black Friday dirigida a Ventas. Dos usuarios introdujeron credenciales corporativas. Se detectaron inicios de sesión de riesgo (Impossible Travel) en Entra ID. Respuesta inmediata: Aislamiento de dispositivos vía Intune, revocación de tokens de sesión, reseteo forzado de contraseñas y análisis forense con Live Response.",tools:["Entra ID (Azure AD)","Intune","Defender Live Response","KQL"]},
+  {id:"ps-obfuscated",title:"Ejecución PowerShell Malicioso",tag:"Endpoint / Malware Analysis",date:"Dec 2025",severity:"high",summary:"Interrupción de 'Loader' malicioso basado en scripts ofuscados.",details:"Alerta crítica de EDR: 'Suspicious PowerShell Command Line'. Un usuario ejecutó una supuesta 'Felicitación Navideña.js'. El script lanzó una instancia oculta de PowerShell con comandos codificados en Base64. Realicé la decodificación manual revelando un intento de descarga (DownloadString) desde un dominio C2. El EDR bloqueó la ejecución (AMSI). Aislé el host y bloqueé el dominio en el firewall.",tools:["Defender for Endpoint","PowerShell Decoding","AMSI","Firewalling"]},
+  {id:"shadow-it",title:"Mitigación Riesgo Crítico (Shadow IT)",tag:"Vuln. Mgmt / Hardening",date:"Jan 2026",severity:"critical",summary:"Neutralización de vector de ataque crítico: Activo legacy con riesgo de Credential Dumping.",details:"Detección proactiva mediante Defender TVM de un dispositivo no gestionado con severidad crítica (+100 vulnerabilidades CVE altas). El activo almacenaba credenciales en caché de cuenta con privilegios elevados, exponiendo a 'Credential Dumping' y desplazamiento lateral. Plan de remediación: migración a SharePoint, revocación de credenciales y decomiso definitivo del hardware.",tools:["Defender TVM","Credential Guard","Risk Assessment","Shadow IT Remediation"]},
+  {id:"ceo-phishing",title:"Investigación Phishing C-Level",tag:"Threat Intel / Social Eng.",date:"Dec 2025",severity:"medium",summary:"Descarte de malware en campaña de suplantación dirigida a directivos.",details:"Investigación de Spear Phishing (suplantación de directivo). Se analizó el .eml en ANY.RUN revisando IOCs y tráfico HTTP. Alerta de Suricata (Microsoft Dr. Watson) determinada como Falso Positivo. Confirmada ausencia de payload. Reclasificado como Ingeniería Social pura. Se aplicó bloqueo de remitente y aviso al usuario.",tools:["ANY.RUN","Suricata IDS","Traffic Analysis","Email Header Analysis"]},
+  {id:"sharepoint-aitm",title:"Compromiso SharePoint (AiTM)",tag:"Cloud Security / IR",date:"Jan 2026",severity:"critical",summary:"Contención de ataque de Phishing masivo propagado vía SharePoint legítimo.",details:"Investigación de envío masivo de correos (389 destinatarios) desde cuenta comprometida. El atacante evadió MFA, subió un archivo malicioso (.aspx) y usó la función nativa 'Compartir' para evadir filtros. Análisis forense en Purview para trazar la intrusión, revocación de sesiones, eliminación del artefacto y bloqueo de IP mediante Acceso Condicional en Entra ID.",tools:["Entra ID","Purview Audit","SharePoint Admin","FortiGate"]}
+];
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                        ${statsHtml}
-                    </div>
+const certs=[
+  {title:"CCNAv7: Switching, Routing, Wireless",org:"Cisco",status:"Completado",icon:"fa-network-wired",bg:"rgba(56,183,255,.1)",ic:"var(--accent)"},
+  {title:"CyberOps Associate",org:"Cisco",status:"Completado",icon:"fa-shield-halved",bg:"rgba(56,183,255,.1)",ic:"var(--accent)"},
+  {title:"Técnico Superior ASIR",org:"Formación Profesional",status:"En Curso · Nota media 8.5",icon:"fa-graduation-cap",bg:"rgba(251,191,36,.1)",ic:"var(--yellow)"},
+  {title:"Microsoft SC-200",org:"Microsoft",status:"Objetivo Q1 2026",icon:"fa-bullseye",bg:"rgba(99,102,241,.1)",ic:"#818cf8"},
+  {title:"Fortinet FCP Security",org:"Fortinet",status:"En Proceso",icon:"fa-fire-flame-curved",bg:"rgba(244,63,94,.1)",ic:"var(--red)"}
+];
 
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                         <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                            <h3 class="font-bold text-slate-800 mb-4 flex items-center gap-2"><i class="fa-solid fa-radar text-blue-500"></i> Radar de Competencias</h3>
-                            <div class="chart-container">
-                                <canvas id="skillsRadar"></canvas>
-                            </div>
-                        </div>
-                        <div class="bg-slate-900 p-6 rounded-xl text-white shadow-lg flex flex-col justify-between relative overflow-hidden">
-                            <div class="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
-                            <div class="relative z-10">
-                                <h3 class="font-bold text-xl mb-2">Objetivo Profesional</h3>
-                                <p class="text-slate-300 mb-6">Transición a un rol de <strong>Analista SOC N1/N2 </strong> donde pueda aplicar mi experiencia práctica en resolución de incidentes y administración de sistemas para proteger infraestructuras críticas.</p>
-                                <button onclick="renderView('projects')" class="self-start bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded-lg font-medium transition-colors mb-2">
-                                    Ver Mi Proyecto SOC
-                                </button>
-                                <button onclick="renderView('war-room')" class="self-start bg-slate-700 hover:bg-slate-600 text-white px-6 py-2 rounded-lg font-medium transition-colors ml-2">
-                                    Ver Casos de Incidente
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
+const sevColor={critical:"#f43f5e",high:"#fb923c",medium:"#fbbf24",low:"#10b981"};
+const sevLabel={critical:"CRÍTICO",high:"ALTO",medium:"MEDIO",low:"BAJO"};
 
-        // NEW: Function to render the Projects section
-        function renderProjects() {
-            const projectsHtml = profileData.projects.map(p => `
-                <div class="bg-white rounded-2xl border border-slate-200 shadow-lg overflow-hidden animate-fade-in">
-                    <div class="project-gradient p-8 text-white relative">
-                        <div class="absolute top-0 right-0 w-40 h-40 bg-white opacity-5 rounded-full -mr-10 -mt-10"></div>
-                        <div class="flex justify-between items-start relative z-10">
-                            <div>
-                                <span class="bg-blue-500 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider mb-3 inline-block">${p.status}</span>
-                                <h2 class="text-3xl font-bold mb-2">${p.title}</h2>
-                                <p class="text-blue-200 text-lg">${p.subtitle}</p>
-                            </div>
-                            <div class="hidden md:block">
-                                <i class="fa-solid fa-network-wired text-6xl opacity-20"></i>
-                            </div>
-                        </div>
-                        <div class="mt-6 flex flex-wrap gap-2">
-                            ${p.tags.map(tag => `<span class="px-3 py-1 bg-white/10 border border-white/20 rounded-full text-sm">${tag}</span>`).join('')}
-                        </div>
-                    </div>
-                    
-                    <div class="p-8">
-                        <div class="mb-8">
-                            <h3 class="text-xl font-bold text-slate-800 mb-3 border-b border-slate-100 pb-2">Descripción del Proyecto</h3>
-                            <p class="text-slate-600 leading-relaxed">${p.description}</p>
-                        </div>
-                        
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div>
-                                <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-                                    <i class="fa-solid fa-check-circle text-green-500"></i> Logros Clave & Implementación
-                                </h3>
-                                <ul class="space-y-4">
-                                    ${p.achievements.map(ach => `
-                                        <li class="flex items-start gap-3">
-                                            <div class="mt-1.5 w-2 h-2 rounded-full bg-blue-500 flex-shrink-0"></div>
-                                            <span class="text-slate-600 text-sm leading-relaxed">${ach}</span>
-                                        </li>
-                                    `).join('')}
-                                </ul>
-                            </div>
-                            <div class="bg-slate-50 p-6 rounded-xl border border-slate-200">
-                                <h3 class="text-lg font-bold text-slate-800 mb-4">Arquitectura Técnica</h3>
-                                <div class="space-y-4">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-8 h-8 rounded bg-white border border-slate-200 flex items-center justify-center text-blue-600"><i class="fa-brands fa-docker"></i></div>
-                                        <div>
-                                            <p class="font-semibold text-slate-700 text-sm">Wazuh en Docker</p>
-                                            <p class="text-xs text-slate-500">Despliegue escalable en contenedores</p>
-                                        </div>
-                                    </div>
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-8 h-8 rounded bg-white border border-slate-200 flex items-center justify-center text-green-600"><i class="fa-brands fa-python"></i></div>
-                                        <div>
-                                            <p class="font-semibold text-slate-700 text-sm">Automatización Python</p>
-                                            <p class="text-xs text-slate-500">Scripts de integración API & Reporting</p>
-                                        </div>
-                                    </div>
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-8 h-8 rounded bg-white border border-slate-200 flex items-center justify-center text-purple-600"><i class="fa-solid fa-magnifying-glass-chart"></i></div>
-                                        <div>
-                                            <p class="font-semibold text-slate-700 text-sm">Velociraptor DFIR</p>
-                                            <p class="text-xs text-slate-500">Orquestación de respuesta forense</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
+// CURSOR
+const cur=document.getElementById('cursor'),ring=document.getElementById('cursor-ring');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;cur.style.left=mx+'px';cur.style.top=my+'px';});
+(function a(){rx+=(mx-rx)*.1;ry+=(my-ry)*.1;ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(a);})();
+document.addEventListener('mouseover',e=>{if(e.target.closest('button,a')){cur.style.width='14px';cur.style.height='14px';ring.style.width='48px';ring.style.height='48px';}});
+document.addEventListener('mouseout',e=>{if(e.target.closest('button,a')){cur.style.width='8px';cur.style.height='8px';ring.style.width='32px';ring.style.height='32px';}});
 
-            return `
-                <div class="animate-fade-in space-y-8">
-                    <div class="flex items-center gap-3 mb-6">
-                        <div class="p-3 bg-blue-100 text-blue-600 rounded-lg"><i class="fa-solid fa-rocket text-xl"></i></div>
-                        <div>
-                            <h2 class="text-3xl font-bold text-slate-800">Proyectos Destacados</h2>
-                            <p class="text-slate-500">Implementaciones reales de arquitectura de seguridad.</p>
-                        </div>
-                    </div>
-                    ${projectsHtml}
-                </div>
-            `;
-        }
+// PARTICLES
+(function(){const c=document.getElementById('particles');for(let i=0;i<20;i++){const p=document.createElement('div');p.className='pt';p.style.cssText=`left:${Math.random()*100}%;bottom:0;width:${Math.random()*1.5+.5}px;height:${Math.random()*1.5+.5}px;--dr:${(Math.random()-.5)*60}px;animation-duration:${Math.random()*12+8}s;animation-delay:${Math.random()*10}s;`;c.appendChild(p);}})();
 
-        function renderWarRoom() {
-            const casesHtml = profileData.cases.map((c, index) => `
-                <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden case-card cursor-pointer group" onclick="toggleCase('${c.id}')">
-                    <div class="p-6 border-l-4 border-blue-500 h-full flex flex-col">
-                        <div class="flex justify-between items-start mb-3">
-                            <span class="px-2 py-1 bg-blue-50 text-blue-700 text-xs font-bold uppercase rounded border border-blue-100">${c.tag}</span>
-                            <span class="text-slate-400 text-sm font-mono">${c.date}</span>
-                        </div>
-                        <h3 class="text-xl font-bold text-slate-800 mb-2 group-hover:text-blue-600 transition-colors">${c.title}</h3>
-                        <p class="text-slate-600 text-sm mb-4 flex-1">${c.summary}</p>
-                        
-                        <div class="flex flex-wrap gap-2 mt-auto">
-                            ${c.tools.map(t => `<span class="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded">${t}</span>`).join('')}
-                        </div>
-                        
-                        <div id="case-${c.id}" class="hidden mt-4 pt-4 border-t border-slate-100 animate-fade-in">
-                            <p class="text-slate-700 text-sm leading-relaxed bg-slate-50 p-3 rounded border border-slate-100">
-                                <i class="fa-solid fa-magnifying-glass text-blue-400 mr-2"></i>
-                                ${c.details}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
+// THEME
+let isDark=true;
+let chartInited=false,radarChart=null;
+function toggleTheme(){
+  isDark=!isDark;
+  document.documentElement.setAttribute('data-theme',isDark?'dark':'light');
+  const track=document.getElementById('toggle-track');
+  const lbl=document.getElementById('theme-lbl');
+  if(track)track.classList.toggle('on',isDark);
+  if(lbl)lbl.textContent=isDark?'Modo Oscuro':'Modo Claro';
+  if(chartInited){radarChart.destroy();chartInited=false;initChart();}
+}
 
-            return `
-                <div class="animate-fade-in space-y-6">
-                    <div class="flex justify-between items-end mb-2">
-                        <div>
-                            <h2 class="text-3xl font-bold text-slate-800">War Room</h2>
-                            <p class="text-slate-500">Casos prácticos e incidentes reales resueltos.</p>
-                        </div>
-                        <span class="bg-red-100 text-red-600 text-xs font-bold px-3 py-1 rounded-full animate-pulse">Live Data</span>
-                    </div>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        ${casesHtml}
-                    </div>
-                    
-                    <div class="mt-8 p-4 bg-blue-50 rounded-lg border border-blue-100 text-sm text-blue-800 flex gap-3 items-start">
-                        <i class="fa-solid fa-info-circle mt-1"></i>
-                        <p><strong>Nota:</strong> Estos casos demuestran una metodología basada en evidencia, diferenciación entre riesgo técnico/negocio y capacidad de troubleshooting en capas profundas (OS, Red), más allá del simple triaje de alertas.</p>
-                    </div>
-                </div>
-            `;
-        }
+// SPLASH
+function runSplash(){
+  const ids=['sl1','sl2','sl3','sl4','sl5','sl6'];
+  ids.forEach((id,i)=>setTimeout(()=>document.getElementById(id).classList.add('show'),i*270));
+  setTimeout(()=>{
+    document.getElementById('sn').classList.add('show');
+    document.getElementById('sr').classList.add('show');
+    document.getElementById('sb').classList.add('show');
+    setTimeout(()=>document.getElementById('sbf').classList.add('go'),50);
+  },ids.length*270+100);
+  setTimeout(()=>{
+    document.getElementById('splash').classList.add('gone');
+    document.getElementById('app').classList.add('visible');
+    buildAll();initBars();initScrollObserver();
+  },ids.length*270+2300);
+}
+runSplash();
 
-        function renderSkills() {
-            return `
-                <div class="animate-fade-in space-y-8">
-                    <h2 class="text-3xl font-bold text-slate-800 mb-6">Stack Tecnológico</h2>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
-                            <div class="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
-                                <div class="w-10 h-10 rounded-lg bg-red-100 text-red-600 flex items-center justify-center"><i class="fa-solid fa-shield-halved"></i></div>
-                                <h3 class="font-bold text-lg text-slate-800">Ciberseguridad</h3>
-                            </div>
-                            <ul class="space-y-3">
-                                ${profileData.skills.security.map(s => `<li class="flex items-center gap-2 text-slate-600 text-sm"><i class="fa-solid fa-check text-green-500"></i> ${s}</li>`).join('')}
-                            </ul>
-                        </div>
+// BUILD
+function buildAll(){
+  // Cases
+  document.getElementById('cases-list').innerHTML=cases.map((c,i)=>`
+    <div class="ci" id="ci-${c.id}" data-severity="${c.severity}" style="--sev:${sevColor[c.severity]}">
+      <button class="ci-btn" onclick="toggleCase('${c.id}')">
+        <span class="ci-num">${String(i+1).padStart(2,'0')}</span>
+        <div class="ci-main">
+          <div class="ci-title">${c.title}</div>
+          <div class="ci-sum">${c.summary}</div>
+          <div style="display:flex;gap:6px;margin-top:7px"><span class="tag tp" style="font-size:9px">${c.tag}</span></div>
+        </div>
+        <div class="ci-right">
+          <span class="sev-b" style="color:${sevColor[c.severity]};border-color:${sevColor[c.severity]}30;background:${sevColor[c.severity]}10">${sevLabel[c.severity]}</span>
+          <span class="ci-date">${c.date}</span>
+          <i class="fa-solid fa-chevron-right ci-arr"></i>
+        </div>
+      </button>
+      <div class="ci-body">
+        <div class="ci-inner">
+          <hr>
+          <p>${c.details}</p>
+          <div class="tools-lbl">Herramientas utilizadas</div>
+          <div class="tools-wrap">${c.tools.map(t=>`<span class="tag td">${t}</span>`).join('')}</div>
+        </div>
+      </div>
+    </div>
+  `).join('');
 
-                        <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
-                            <div class="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
-                                <div class="w-10 h-10 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center"><i class="fa-solid fa-server"></i></div>
-                                <h3 class="font-bold text-lg text-slate-800">Sistemas & Cloud</h3>
-                            </div>
-                            <ul class="space-y-3">
-                                ${profileData.skills.systems.map(s => `<li class="flex items-center gap-2 text-slate-600 text-sm"><i class="fa-solid fa-check text-green-500"></i> ${s}</li>`).join('')}
-                            </ul>
-                        </div>
+  // Feed
+  document.getElementById('feed-list').innerHTML=[...cases].slice(-5).reverse().map(c=>`
+    <div class="feed-item">
+      <div class="fdot" style="background:${sevColor[c.severity]}"></div>
+      <div style="flex:1;min-width:0"><div class="ftxt">${c.title}</div><div class="fsub">${c.tag}</div></div>
+      <div class="fdate">${c.date}</div>
+    </div>
+  `).join('');
 
-                         <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
-                            <div class="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
-                                <div class="w-10 h-10 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center"><i class="fa-solid fa-brain"></i></div>
-                                <h3 class="font-bold text-lg text-slate-800">Competencias</h3>
-                            </div>
-                            <ul class="space-y-3">
-                                ${profileData.skills.soft.map(s => `<li class="flex items-center gap-2 text-slate-600 text-sm"><i class="fa-solid fa-star text-yellow-400"></i> ${s}</li>`).join('')}
-                            </ul>
-                        </div>
-                    </div>
+  // Certs
+  document.getElementById('certs-list').innerHTML=certs.map(c=>`
+    <div class="cert-row scanline">
+      <div class="cert-ico" style="background:${c.bg}"><i class="fa-solid ${c.icon}" style="color:${c.ic}"></i></div>
+      <div style="flex:1;min-width:0"><div class="cert-name">${c.title}</div><div class="cert-org">${c.org}</div></div>
+      ${c.status.includes('Completado')?`<span class="tag tg"><i class="fa-solid fa-check"></i> ${c.status}</span>`:c.status.includes('Objetivo')?`<span class="tag tp">${c.status}</span>`:`<span class="tag ta">${c.status}</span>`}
+    </div>
+  `).join('');
+}
 
-                    <div class="bg-slate-800 text-white p-8 rounded-xl">
-                         <h3 class="font-bold text-xl mb-4">Laboratorio Personal</h3>
-                         <p class="text-slate-300 mb-4">Entorno activo para experimentación segura y aprendizaje continuo.</p>
-                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div class="bg-slate-700 p-4 rounded border border-slate-600">
-                                <h4 class="font-bold text-blue-400 mb-1">Wazuh SIEM</h4>
-                                <p class="text-xs text-slate-400">Despliegue 'All-in-one' en Ubuntu Server. Agentes desplegados en endpoints Windows para monitorización de integridad de archivos y detección de amenazas (simulaciones con Atomic Red Team).</p>
-                            </div>
-                             <div class="bg-slate-700 p-4 rounded border border-slate-600">
-                                <h4 class="font-bold text-red-400 mb-1">TryHackMe</h4>
-                                <p class="text-xs text-slate-400">Top X% Rank. Rutas completadas: Pre-Security, Cyber Defense. Máquinas prácticas de pentesting y análisis de tráfico.</p>
-                            </div>
-                         </div>
-                    </div>
-                </div>
-            `;
-        }
+function initBars(){
+  const skills=[{n:'Incident Response',p:85},{n:'Microsoft Defender',p:82},{n:'Threat Hunting',p:75},{n:'KQL / Log Analysis',p:74},{n:'Cloud / M365',p:80},{n:'Redes / FortiGate',p:70}];
+  document.getElementById('bars').innerHTML=skills.map(s=>`
+    <div class="prg-item">
+      <div class="prg-lbl"><span>${s.n}</span><span>${s.p}%</span></div>
+      <div class="prg-track"><div class="prg-fill" data-w="${s.p}"></div></div>
+    </div>
+  `).join('');
+  setTimeout(()=>document.querySelectorAll('.prg-fill').forEach(f=>f.style.width=f.dataset.w+'%'),300);
+}
 
-        function renderRoadmap() {
-            return `
-                <div class="animate-fade-in max-w-3xl mx-auto">
-                    <h2 class="text-3xl font-bold text-slate-800 mb-2">Formación & Roadmap</h2>
-                    <p class="text-slate-500 mb-8">Aprendizaje continuo y validación oficial.</p>
+function initChart(){
+  if(chartInited)return;chartInited=true;
+  const ctx=document.getElementById('radarChart');if(!ctx)return;
+  const isL=document.documentElement.getAttribute('data-theme')==='light';
+  const gc=isL?'rgba(0,0,0,.07)':'rgba(255,255,255,.04)';
+  const lc=isL?'#5a7090':'#5a7399';
+  radarChart=new Chart(ctx,{
+    type:'radar',
+    data:{labels:['Incident Response','Threat Hunting','Forense','Redes/FW','Cloud/M365','SysAdmin'],datasets:[{data:[85,75,70,72,80,78],backgroundColor:'rgba(56,183,255,.07)',borderColor:'rgba(56,183,255,.5)',borderWidth:1.5,pointBackgroundColor:'rgba(56,183,255,.9)',pointRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{r:{beginAtZero:true,max:100,grid:{color:gc},angleLines:{color:gc},ticks:{display:false},pointLabels:{color:lc,font:{family:'JetBrains Mono',size:10}}}}}
+  });
+}
 
-                    <div class="space-y-6 relative pl-4">
-                        <div class="timeline-line"></div>
-                        ${profileData.certs.map(c => `
-                            <div class="bg-white p-5 rounded-lg border border-slate-200 shadow-sm relative z-10 ml-6 flex justify-between items-center group hover:border-blue-300 transition-colors">
-                                <div class="absolute left-[-31px] top-1/2 transform -translate-y-1/2 w-4 h-4 rounded-full ${c.status === 'Completado' ? 'bg-green-500' : (c.status.includes('Objetivo') ? 'bg-slate-300' : 'bg-yellow-500')} border-4 border-slate-50"></div>
-                                <div>
-                                    <h3 class="font-bold text-slate-800">${c.title}</h3>
-                                    <p class="text-sm text-slate-500">${c.org}</p>
-                                </div>
-                                <span class="text-xs font-bold px-3 py-1 rounded-full ${
-                                    c.status === 'Completado' ? 'bg-green-100 text-green-700' : 
-                                    (c.status.includes('Objetivo') ? 'bg-slate-100 text-slate-500' : 'bg-yellow-100 text-yellow-700')
-                                }">${c.status}</span>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-            `;
-        }
+function toggleCase(id){
+  const item=document.getElementById('ci-'+id);
+  const was=item.classList.contains('open');
+  document.querySelectorAll('.ci.open').forEach(e=>e.classList.remove('open'));
+  if(!was)item.classList.add('open');
+}
 
-        function toggleCase(id) {
-            const el = document.getElementById(`case-${id}`);
-            if (el.classList.contains('hidden')) {
-                el.classList.remove('hidden');
-            } else {
-                el.classList.add('hidden');
-            }
-        }
+function filterCases(sev){
+  document.querySelectorAll('.wr-filter').forEach(b=>b.classList.remove('active'));
+  document.querySelector('.wr-filter[data-sev="'+sev+'"]').classList.add('active');
+  document.querySelectorAll('.ci').forEach(ci=>{
+    if(sev==='all'||ci.dataset.severity===sev){ci.classList.remove('hidden');}
+    else{ci.classList.add('hidden');ci.classList.remove('open');}
+  });
+}
 
-        function initChart() {
-            const ctx = document.getElementById('skillsRadar');
-            if (!ctx) return;
-            
-            new Chart(ctx, {
-                type: 'radar',
-                data: {
-                    labels: ['Incident Response', 'SysAdmin (Win/Lin)', 'Network Security', 'Forensics', 'Cloud Security (M365)', 'Troubleshooting'],
-                    datasets: [{
-                        label: 'Nivel de Competencia',
-                        data: [80, 90, 85, 65, 75, 95],
-                        fill: true,
-                        backgroundColor: 'rgba(56, 189, 248, 0.2)',
-                        borderColor: 'rgb(56, 189, 248)',
-                        pointBackgroundColor: 'rgb(15, 23, 42)',
-                        pointBorderColor: '#fff',
-                        pointHoverBackgroundColor: '#fff',
-                        pointHoverBorderColor: 'rgb(56, 189, 248)'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    elements: { line: { borderWidth: 3 } },
-                    scales: {
-                        r: {
-                            angleLines: { color: 'rgba(0,0,0,0.1)' },
-                            grid: { color: 'rgba(0,0,0,0.05)' },
-                            pointLabels: { font: { size: 11, weight: '600' }, color: '#475569' },
-                            ticks: { display: false, max: 100 }
-                        }
-                    },
-                    plugins: { legend: { display: false } }
-                }
-            });
-        }
+const mainEl=document.getElementById('main-scroll');
+const heroEl=document.getElementById('hero');
+mainEl.addEventListener('scroll',()=>heroEl.classList.toggle('collapsed',mainEl.scrollTop>60));
 
-        function renderView(viewName) {
-            const contentArea = document.getElementById('content-area');
-            
-            // Update Nav
-            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active', 'bg-slate-800', 'text-white'));
-            const activeNav = document.getElementById(`nav-${viewName}`);
-            if(activeNav) activeNav.classList.add('active');
+const secMap={overview:'sec-overview',projects:'sec-projects','war-room':'sec-war-room',skills:'sec-skills',roadmap:'sec-roadmap',contact:'sec-contact'};
+function navTo(id){
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.querySelector('[onclick="navTo(\''+id+'\')"]').classList.add('active');
+  const t=document.getElementById(secMap[id]);
+  if(t)mainEl.scrollTo({top:t.offsetTop-90,behavior:'smooth'});
+  if(id==='skills')setTimeout(initChart,600);
+}
 
-            // Render Content
-            if (viewName === 'overview') {
-                contentArea.innerHTML = renderOverview();
-                setTimeout(initChart, 100); // Delay for DOM
-            } else if (viewName === 'projects') {
-                contentArea.innerHTML = renderProjects();
-            } else if (viewName === 'war-room') {
-                contentArea.innerHTML = renderWarRoom();
-            } else if (viewName === 'skills') {
-                contentArea.innerHTML = renderSkills();
-            } else if (viewName === 'roadmap') {
-                contentArea.innerHTML = renderRoadmap();
-            }
-        }
+mainEl.addEventListener('scroll',()=>{
+  const st=mainEl.scrollTop+160;
+  let c='overview';
+  Object.entries(secMap).forEach(([nid,sid])=>{const el=document.getElementById(sid);if(el&&el.offsetTop<=st)c=nid;});
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const a=document.querySelector('[onclick="navTo(\''+c+'\')"]');
+  if(a)a.classList.add('active');
+});
 
-        // Init
-        document.addEventListener('DOMContentLoaded', () => {
-            renderView('overview');
-        });
-
-    </script>
-    <style>
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
-    </style>
-</body>
-</html>
+function initScrollObserver(){
+  const obs=new IntersectionObserver(entries=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting
