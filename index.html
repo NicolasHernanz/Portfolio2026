@@ -343,7 +343,7 @@ main::-webkit-scrollbar-thumb{background:var(--surface2);border-radius:2px;}
       <div class="sf-sub">Roles SOC · Remoto</div>
       <div class="sf-links">
         <a href="https://www.linkedin.com/in/nicolas-hernanz-ba2846255/" target="_blank" class="sf-link"><i class="fa-brands fa-linkedin"></i></a>
-        <a href="https://nicolashernanz.github.io/Portfolio2025/" target="_blank" class="sf-link"><i class="fa-brands fa-github"></i></a>
+        <a href="https://nicolashernanz.github.io/Portfolio2026/" target="_blank" class="sf-link"><i class="fa-brands fa-github"></i></a>
         <a href="CV_Nicolas_Hernanz.pdf" download class="sf-link"><i class="fa-solid fa-file-arrow-down"></i></a>
       </div>
     </div>
@@ -516,14 +516,14 @@ main::-webkit-scrollbar-thumb{background:var(--surface2);border-radius:2px;}
             <div><div class="cc-label">LinkedIn</div><div class="cc-sub">nicolas-hernanz-ba2846255</div></div>
             <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:11px;color:var(--dim);margin-left:auto"></i>
           </a>
-          <a href="https://nicolashernanz.github.io/Portfolio2025/" target="_blank" class="contact-card">
+          <a href="https://nicolashernanz.github.io/Portfolio2026/" target="_blank" class="contact-card">
             <div class="cc-icon" style="background:rgba(255,255,255,.05)"><i class="fa-brands fa-github" style="color:var(--text)"></i></div>
-            <div><div class="cc-label">GitHub / Portfolio</div><div class="cc-sub">nicolashernanz.github.io/Portfolio2025</div></div>
+            <div><div class="cc-label">GitHub / Portfolio</div><div class="cc-sub">nicolashernanz.github.io/Portfolio2026</div></div>
             <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:11px;color:var(--dim);margin-left:auto"></i>
           </a>
-          <a href="/cdn-cgi/l/email-protection#d5bbbdb6b0b9b0b8bcbbec95b2b8b4bcb9fbb6bab8" class="contact-card">
+          <a href="mailto:nhcelemin9@gmail.com" class="contact-card">
             <div class="cc-icon" style="background:rgba(56,183,255,.1)"><i class="fa-solid fa-envelope" style="color:var(--accent)"></i></div>
-            <div><div class="cc-label">Email</div><div class="cc-sub"><span class="__cf_email__" data-cfemail="57393f34323b323a3e396e17303a363e3b7934383a">[email&#160;protected]</span></div></div>
+            <div><div class="cc-label">Email</div><div class="cc-sub">nhcelemin9@gmail.com</div></div>
             <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:11px;color:var(--dim);margin-left:auto"></i>
           </a>
           <div class="contact-card">
@@ -537,7 +537,7 @@ main::-webkit-scrollbar-thumb{background:var(--surface2);border-radius:2px;}
   </main>
 </div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script>
 const cases=[
   {id:"rovnix",title:"Incidente Troyano Rovnix",tag:"Threat Hunting / EDR",date:"Sep 2025",severity:"high",summary:"Detección proactiva de un 'Dropper' que evadió alertas críticas iniciales.",details:"Detecté actividad anómala en un endpoint que Microsoft Defender había bloqueado parcialmente pero no alertado como crítico. Investigando el árbol de procesos, identifiqué un 'Dropper' (Rovnix) descargado por el usuario. Localicé un servidor interno infectado que actuaba como origen secundario. Aislé el host, limpié el servidor y evité el despliegue del payload final (Ransomware/Spyware).",tools:["Microsoft Defender","KQL","FortiGate"]},
   {id:"chatgpt",title:"Investigación Forense ChatGPT",tag:"Forensic / Logs",date:"Oct 2025",severity:"medium",summary:"Atribución de actividad de usuario en aplicación sin auditoría nativa.",details:"Se requería identificar qué usuario realizó una acción en una cuenta compartida de ChatGPT. Al no existir logs de usuario en la app, utilicé las herramientas de desarrollador (F12) para extraer el timestamp exacto y el ID de dispositivo. Correlacioné este timestamp con los logs de tráfico web del firewall FortiGate para identificar la IP de origen y el usuario de Active Directory responsable.",tools:["Browser DevTools","FortiGate Logs","Correlation"]},
@@ -718,4 +718,11 @@ mainEl.addEventListener('scroll',()=>{
 function initScrollObserver(){
   const obs=new IntersectionObserver(entries=>{
     entries.forEach(e=>{
-      if(e.isIntersecting
+      if(e.isIntersecting){e.target.classList.add('in-view');if(e.target.id==='sec-skills')initChart();}
+    });
+  },{threshold:.06,rootMargin:'0px 0px -30px 0px'});
+  document.querySelectorAll('.section-block').forEach(el=>obs.observe(el));
+}
+</script>
+</body>
+</html>
