@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark" data-lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nicolas Hernanz | Security Engineer</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500;600&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+/* ─── TOKENS ─────────────────────────────────────── */
+:root{
+  --bg:#05080f;--bg2:#090d16;--surface:#0d1220;--surface2:#111827;--surface3:#161f30;
+  --border:rgba(56,183,255,.06);--border2:rgba(56,183,255,.18);--border3:rgba(56,183,255,.32);
+  --accent:#38bff8;--accent2:#6366f1;--accent3:#10b981;
+  --red:#f43f5e;--yellow:#fbbf24;--orange:#fb923c;--purple:#a78bfa;
+  --text:#dde8f5;--muted:#4e6a8a;--dim:#253448;
+  --shadow:rgba(0,0,0,.6);
+  --sidebar:240px;
+}
+[data-theme="light"]{
+  --bg:#f2f5fb;--bg2:#e9edf6;--surface:#ffffff;--surface2:#f0f4fa;--surface3:#e4eaf4;
+  --border:rgba(30,80,160,.08);--border2:rgba(30,80,160,.2);--border3:rgba(30,80,160,.36);
+  --text:#0d1b2e;--muted:#5a7090;--dim:#a0b4cc;--shadow:rgba(0,0,0,.1);
+}
+
+/* ─── RESET ──────────────────────────────────────── */
+*{box-sizing:border-box;margin:0;padding:0;cursor:none!important;}
+body{font-family:'JetBrains Mono',monospace;background:var(--bg);color:var(--text);overflow-x:hidden;transition:background .3s,color .3s;}
+
+/* noise overlay */
+body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.03'/%3E%3C/svg%3E");
+  opacity:.6;transition:opacity .3s;}
+[data-theme="light"] body::after{opacity:.2;}
+
+/* ─── CURSOR ─────────────────────────────────────── */
+#cur{position:fixed;width:7px;height:7px;background:var(--accent);border-radius:50%;pointer-events:none;z-index:99999;transform:translate(-50%,-50%);transition:width .12s,height .12s;}
+#cur-ring{position:fixed;width:28px;height:28px;border:1px solid rgba(56,183,255,.3);border-radius:50%;pointer-events:none;z-index:99998;transform:translate(-50%,-50%);}
+[data-theme="light"] #cur{mix-blend-mode:multiply;}
+
+/* ─── PARTICLES ──────────────────────────────────── */
+#pts{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;}
+.pt{position:absolute;border-radius:50%;background:var(--accent);opacity:0;animation:ptrise linear infinite;}
+@keyframes ptrise{0%{opacity:0;transform:translateY(0) translateX(0)}8%{opacity:.35}90%{opacity:.05}100%{opacity:0;transform:translateY(-100vh) translateX(var(--dx));}}
+
+/* ─── LAYOUT ─────────────────────────────────────── */
+#app{display:flex;height:100vh;overflow:hidden;position:relative;z-index:1;}
+
+/* ─── SIDEBAR ────────────────────────────────────── */
+aside{width:var(--sidebar);min-width:var(--sidebar);background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;position:relative;z-index:20;transition:background .3s,border-color .3s;}
+aside::before{content:'';position:absolute;top:-60px;left:-60px;width:200px;height:200px;background:radial-gradient(circle,rgba(56,183,255,.04) 0%,transparent 70%);pointer-events:none;}
+
+.logo-zone{padding:22px 18px 18px;border-bottom:1px solid var(--border);}
+.av{width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:12px;color:#fff;position:relative;flex-shrink:0;}
+.av::after{content:'';position:absolute;inset:-2px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent2));z-index:-1;opacity:.2;filter:blur(7px);}
+.logo-name{font-family:'Syne',sans-serif;font-weight:700;font-size:13px;color:var(--text);line-height:1.2;}
+.logo-role{font-size:9px;color:var(--muted);margin-top:2px;letter-spacing:.3px;}
+
+.nav-section{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);padding:16px 18px 6px;font-family:'Syne',sans-serif;}
+.ni{display:flex;align-items:center;gap:10px;padding:9px 18px;font-size:10px;font-family:'Syne',sans-serif;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);background:none;border:none;width:100%;text-align:left;border-left:2px solid transparent;transition:all .18s;}
+.ni i{font-size:11px;width:13px;text-align:center;}
+.ni:hover{color:var(--text);background:rgba(56,183,255,.03);}
+.ni.on{color:var(--accent);background:rgba(56,183,255,.05);border-left-color:var(--accent);}
+.ni .badge{margin-left:auto;font-size:8px;background:var(--surface2);padding:2px 6px;border-radius:8px;color:var(--muted);}
+.ni.on .badge{background:rgba(56,183,255,.12);color:var(--accent);}
+
+.side-ctrls{padding:0 12px 6px;display:flex;flex-direction:column;gap:5px;}
+.ctrl-btn{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:10px;font-family:'JetBrains Mono',monospace;transition:all .18s;width:100%;}
+.ctrl-btn:hover{border-color:var(--border2);color:var(--text);}
+.trk{width:30px;height:15px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);margin-left:auto;position:relative;transition:background .25s;}
+.trk.on{background:rgba(56,183,255,.18);border-color:var(--accent);}
+.trk-th{position:absolute;top:2px;left:2px;width:9px;height:9px;border-radius:50%;background:var(--muted);transition:all .22s;}
+.trk.on .trk-th{left:17px;background:var(--accent);}
+
+/* lang toggle */
+.lang-btn{display:flex;align-items:center;gap:6px;padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:10px;font-family:'JetBrains Mono',monospace;transition:all .18s;width:100%;}
+.lang-btn:hover{border-color:var(--border2);color:var(--text);}
+.lang-chips{display:flex;gap:3px;margin-left:auto;}
+.lc{padding:2px 7px;border-radius:4px;font-size:8px;font-family:'Syne',sans-serif;font-weight:700;letter-spacing:.5px;border:1px solid var(--border);color:var(--dim);transition:all .18s;}
+.lc.on{background:rgba(56,183,255,.12);border-color:var(--accent);color:var(--accent);}
+
+.side-footer{margin:4px 12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:13px 15px;}
+.sf-ttl{font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);margin-bottom:9px;}
+.pulse-dot{width:7px;height:7px;border-radius:50%;background:var(--accent3);animation:pulse 2s ease-in-out infinite;flex-shrink:0;}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,.5);}50%{box-shadow:0 0 0 5px rgba(16,185,129,0);}}
+.sf-name{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:var(--text);}
+.sf-sub{font-size:9px;color:var(--muted);margin-top:2px;}
+.sf-links{display:flex;gap:6px;margin-top:10px;}
+.sf-a{display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:7px;background:var(--surface2);border:1px solid var(--border);color:var(--muted);font-size:11px;transition:all .18s;text-decoration:none;}
+.sf-a:hover{background:rgba(56,183,255,.1);border-color:var(--border2);color:var(--accent);}
+
+/* ─── MAIN ───────────────────────────────────────── */
+main{flex:1;overflow-y:auto;overflow-x:hidden;position:relative;}
+main::-webkit-scrollbar{width:2px;}
+main::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:2px;}
+
+/* ─── HERO ───────────────────────────────────────── */
+#hw{position:sticky;top:0;z-index:30;pointer-events:none;}
+#hero{padding:48px 42px 36px;background:linear-gradient(180deg,var(--bg) 50%,transparent);transition:all .4s cubic-bezier(.4,0,.2,1);pointer-events:all;border-bottom:1px solid transparent;}
+#hero.col{padding:12px 42px;background:rgba(5,8,15,.93);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);border-bottom-color:var(--border);}
+[data-theme="light"] #hero.col{background:rgba(242,245,251,.93);}
+.h-pre{font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:var(--accent);margin-bottom:9px;transition:all .3s;overflow:hidden;max-height:24px;opacity:1;}
+#hero.col .h-pre{max-height:0;opacity:0;margin:0;}
+.h-name{font-family:'Syne',sans-serif;font-size:clamp(26px,3.8vw,48px);font-weight:800;line-height:1.05;transition:all .4s cubic-bezier(.4,0,.2,1);}
+#hero.col .h-name{font-size:clamp(15px,1.8vw,18px);}
+.h-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+.h-inline{display:none;align-items:center;gap:10px;font-size:10px;color:var(--muted);}
+#hero.col .h-inline{display:flex;}
+.hsep{width:1px;height:10px;background:var(--dim);}
+.h-desc{font-size:11px;color:var(--muted);line-height:1.9;max-width:640px;margin-top:12px;transition:all .35s;max-height:200px;opacity:1;overflow:hidden;}
+#hero.col .h-desc{max-height:0;opacity:0;margin:0;}
+.h-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;transition:all .35s;max-height:44px;opacity:1;overflow:hidden;}
+#hero.col .h-tags{max-height:0;opacity:0;margin:0;}
+
+/* glitch */
+.glitch{position:relative;}
+.glitch::before,.glitch::after{content:attr(data-text);position:absolute;top:0;left:0;overflow:hidden;clip-path:inset(0);}
+.glitch::before{text-shadow:-1px 0 var(--red);animation:ga 7s infinite linear alternate-reverse;}
+.glitch::after{text-shadow:1px 0 var(--accent);animation:gb 7s infinite linear alternate-reverse;}
+@keyframes ga{0%{clip-path:inset(44% 0 58% 0);transform:translate(-1px)}30%{clip-path:inset(5% 0 88% 0)}65%{clip-path:inset(70% 0 10% 0)}100%{clip-path:inset(22% 0 65% 0);transform:translate(1px)}}
+@keyframes gb{0%{clip-path:inset(55% 0 28% 0);transform:translate(1px)}40%{clip-path:inset(18% 0 68% 0)}70%{clip-path:inset(82% 0 4% 0)}100%{clip-path:inset(8% 0 80% 0);transform:translate(-1px)}}
+
+/* ─── SECTIONS ───────────────────────────────────── */
+#sects{padding:0 42px 80px;}
+.sb{margin-bottom:56px;opacity:0;transform:translateY(20px);transition:opacity .6s cubic-bezier(.4,0,.2,1),transform .6s cubic-bezier(.4,0,.2,1);}
+.sb.vis{opacity:1;transform:none;}
+.slbl{display:flex;align-items:center;gap:9px;margin-bottom:20px;font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);font-family:'Syne',sans-serif;}
+.slbl::after{content:'';flex:1;height:1px;background:var(--border);}
+.slbl span{color:var(--accent);}
+
+/* ─── TAGS ───────────────────────────────────────── */
+.tag{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:5px;font-size:9px;border:1px solid;font-family:'JetBrains Mono',monospace;}
+.ta{background:rgba(56,183,255,.07);border-color:rgba(56,183,255,.2);color:var(--accent);}
+.td{background:rgba(255,255,255,.02);border-color:var(--border2);color:var(--muted);}
+[data-theme="light"] .td{background:rgba(0,0,0,.03);}
+.tg{background:rgba(16,185,129,.07);border-color:rgba(16,185,129,.2);color:var(--accent3);}
+.tp{background:rgba(99,102,241,.08);border-color:rgba(99,102,241,.2);color:#818cf8;}
+.tr{background:rgba(244,63,94,.07);border-color:rgba(244,63,94,.2);color:#fb7185;}
+.ty{background:rgba(251,191,36,.07);border-color:rgba(251,191,36,.2);color:var(--yellow);}
+.to{background:rgba(251,146,60,.07);border-color:rgba(251,146,60,.2);color:var(--orange);}
+
+/* ─── CARDS ──────────────────────────────────────── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px;transition:background .3s,border-color .22s;}
+.card:hover{border-color:var(--border2);}
+.scan{position:relative;overflow:hidden;}
+.scan:hover::after{content:'';position:absolute;left:0;right:0;height:60px;background:linear-gradient(180deg,transparent,rgba(56,183,255,.035),transparent);animation:sc .65s linear;pointer-events:none;z-index:2;}
+@keyframes sc{0%{top:-60px}100%{top:110%}}
+
+/* ─── STATS ──────────────────────────────────────── */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;}
+.sc{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;position:relative;overflow:hidden;transition:all .22s;}
+.sc::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--cc),transparent);opacity:0;transition:opacity .22s;}
+.sc:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:0 10px 24px var(--shadow);}
+.sc:hover::before{opacity:1;}
+.sc.r{--cc:var(--red)}.sc.b{--cc:var(--accent)}.sc.g{--cc:var(--accent3)}.sc.p{--cc:var(--accent2)}.sc.y{--cc:var(--yellow)}
+.sc-bg{position:absolute;right:-6px;bottom:-10px;font-family:'Syne',sans-serif;font-size:58px;font-weight:800;opacity:.03;line-height:1;pointer-events:none;color:var(--text);}
+.sc-ic{font-size:12px;margin-bottom:12px;}
+.sc.r .sc-ic{color:var(--red)}.sc.b .sc-ic{color:var(--accent)}.sc.g .sc-ic{color:var(--accent3)}.sc.p .sc-ic{color:var(--accent2)}.sc.y .sc-ic{color:var(--yellow)}
+.sc-v{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--text);line-height:1;margin-bottom:4px;}
+.sc-l{font-size:8px;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);}
+
+/* ─── GRID HELPERS ───────────────────────────────── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.gw{display:grid;grid-template-columns:3fr 2fr;gap:16px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+
+/* ─── PROGRESS BARS ──────────────────────────────── */
+.prg{margin-bottom:11px;}
+.prg-lbl{display:flex;justify-content:space-between;margin-bottom:4px;font-size:10px;}
+.prg-lbl span:first-child{color:var(--muted);}
+.prg-lbl span:last-child{color:var(--dim);}
+.prg-t{height:2px;background:var(--surface2);border-radius:2px;overflow:hidden;}
+.prg-f{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:2px;transition:width 1.3s cubic-bezier(.4,0,.2,1);}
+
+/* ─── FEED ───────────────────────────────────────── */
+.fi{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
+.fi:last-child{border-bottom:none;}
+.fdot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:4px;}
+.ft{font-family:'Syne',sans-serif;font-size:11px;font-weight:600;color:var(--text);margin-bottom:1px;}
+.fs{font-size:9px;color:var(--muted);}
+.fd{font-size:9px;color:var(--dim);flex-shrink:0;margin-left:auto;}
+
+/* ─── BIG PROJECT CARD ───────────────────────────── */
+.proj-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:34px;position:relative;overflow:hidden;transition:border-color .22s;}
+.proj-card::before{content:'';position:absolute;top:0;right:0;width:280px;height:280px;background:radial-gradient(circle,rgba(99,102,241,.05) 0%,transparent 70%);pointer-events:none;}
+.proj-card:hover{border-color:var(--border2);}
+.proj-t{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--text);margin-bottom:3px;}
+.proj-s{font-size:10px;color:var(--muted);margin-bottom:18px;}
+.proj-desc{font-size:11px;color:var(--muted);line-height:1.9;margin-bottom:20px;}
+
+/* stack items */
+.stk{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:20px;}
+.si{background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:11px 13px;display:flex;align-items:flex-start;gap:9px;transition:border-color .18s;}
+.si:hover{border-color:var(--border2);}
+.si-dot{width:5px;height:5px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:5px;}
+.si-n{font-family:'Syne',sans-serif;font-size:11px;font-weight:600;color:var(--text);margin-bottom:1px;}
+.si-d{font-size:9px;color:var(--muted);line-height:1.4;}
+
+/* metrics */
+.mrow{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:20px 0;}
+.met{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center;}
+.met-v{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:var(--accent);line-height:1;margin-bottom:3px;}
+.met-l{font-size:9px;color:var(--muted);}
+
+/* flow */
+.flow{display:flex;align-items:center;margin:18px 0;overflow-x:auto;padding-bottom:3px;gap:0;}
+.fs-s{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;text-align:center;flex-shrink:0;min-width:82px;}
+.fs-s.hl{border-color:rgba(56,183,255,.28);background:rgba(56,183,255,.05);}
+.fs-s.act{border-color:rgba(244,63,94,.28);background:rgba(244,63,94,.05);}
+.fs-s.ai{border-color:rgba(99,102,241,.28);background:rgba(99,102,241,.05);}
+.fs-ic{font-size:14px;margin-bottom:5px;}
+.fs-n{font-family:'Syne',sans-serif;font-size:9px;font-weight:700;color:var(--text);}
+.fs-d{font-size:8px;color:var(--muted);margin-top:1px;}
+.farr{color:var(--accent);font-size:10px;padding:0 7px;flex-shrink:0;opacity:.5;}
+
+/* achievements */
+.ach{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);font-size:11px;color:var(--muted);line-height:1.75;}
+.ach:last-child{border-bottom:none;}
+.ach-blt{color:var(--accent);font-size:8px;margin-top:5px;flex-shrink:0;}
+
+/* ─── ROLES HIGHLIGHT ────────────────────────────── */
+.roles-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:20px;}
+.role-card{background:var(--surface2);border:1px solid var(--border);border-radius:11px;padding:16px 18px;transition:all .2s;position:relative;overflow:hidden;}
+.role-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--rc);border-radius:3px 0 0 3px;}
+.role-card:hover{border-color:var(--border2);transform:translateX(3px);}
+.rc-title{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:var(--text);margin-bottom:4px;}
+.rc-sub{font-size:9px;color:var(--muted);line-height:1.55;}
+.rc-tag{font-size:8px;letter-spacing:.8px;text-transform:uppercase;font-family:'Syne',sans-serif;font-weight:700;margin-bottom:8px;}
+
+/* ─── WAR ROOM ───────────────────────────────────── */
+.wr-filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
+.wrf{padding:5px 11px;border-radius:6px;font-size:9px;font-family:'Syne',sans-serif;font-weight:600;letter-spacing:.5px;border:1px solid var(--border);background:var(--surface);color:var(--muted);transition:all .18s;text-transform:uppercase;}
+.wrf:hover{border-color:var(--border2);color:var(--text);}
+.wrf.on{background:rgba(56,183,255,.09);border-color:rgba(56,183,255,.28);color:var(--accent);}
+.wrf[data-s="critical"].on{background:rgba(244,63,94,.09);border-color:rgba(244,63,94,.28);color:#fb7185;}
+.wrf[data-s="high"].on{background:rgba(251,146,60,.09);border-color:rgba(251,146,60,.28);color:var(--orange);}
+.wrf[data-s="medium"].on{background:rgba(251,191,36,.07);border-color:rgba(251,191,36,.28);color:var(--yellow);}
+.wrf[data-s="low"].on{background:rgba(16,185,129,.07);border-color:rgba(16,185,129,.28);color:var(--accent3);}
+.ci-list{display:flex;flex-direction:column;gap:6px;}
+.ci{background:var(--surface);border:1px solid var(--border);border-radius:11px;overflow:hidden;transition:all .22s;}
+.ci:hover{border-color:var(--border2);}
+.ci.open{border-color:var(--border2);box-shadow:0 0 22px rgba(56,183,255,.04);}
+.ci.hid{display:none;}
+.ci-btn{display:flex;align-items:center;gap:12px;padding:14px 18px;width:100%;background:none;border:none;color:inherit;text-align:left;position:relative;}
+.ci-btn::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--sv);opacity:0;transition:opacity .18s;}
+.ci.open .ci-btn::before{opacity:1;}
+.ci-num{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;color:var(--dim);width:24px;flex-shrink:0;}
+.ci-main{flex:1;min-width:0;}
+.ci-t{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:var(--text);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ci-sum{font-size:9px;color:var(--muted);line-height:1.4;}
+.ci-r{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.sv-b{font-size:8px;letter-spacing:.7px;padding:2px 6px;border-radius:3px;font-family:'Syne',sans-serif;font-weight:700;border:1px solid;}
+.ci-date{font-size:9px;color:var(--dim);}
+.ci-arr{font-size:10px;color:var(--muted);transition:transform .22s;margin-left:3px;}
+.ci.open .ci-arr{transform:rotate(90deg);color:var(--accent);}
+.ci-body{max-height:0;overflow:hidden;transition:max-height .4s cubic-bezier(.4,0,.2,1);}
+.ci.open .ci-body{max-height:500px;}
+.ci-inner{padding:0 18px 18px 54px;}
+.ci-inner hr{border:none;border-top:1px solid var(--border);margin-bottom:14px;}
+.ci-inner p{font-size:11px;color:var(--muted);line-height:1.85;margin-bottom:12px;}
+.tl{font-size:8px;letter-spacing:1.2px;text-transform:uppercase;color:var(--dim);margin-bottom:7px;}
+.tw{display:flex;flex-wrap:wrap;gap:5px;}
+
+/* ─── SKILLS ─────────────────────────────────────── */
+.sp{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:10px;color:var(--muted);transition:all .18s;position:relative;overflow:hidden;}
+.sp::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(56,183,255,.04),transparent);opacity:0;transition:opacity .18s;}
+.sp:hover{border-color:var(--border2);color:var(--text);}
+.sp:hover::before{opacity:1;}
+.chart-w{height:260px;position:relative;}
+
+/* ─── CERTS ──────────────────────────────────────── */
+.cert{display:flex;align-items:center;gap:13px;padding:14px 16px;background:var(--surface);border:1px solid var(--border);border-radius:11px;transition:all .2s;margin-bottom:6px;}
+.cert:hover{border-color:var(--border2);transform:translateX(3px);}
+.cert-ico{width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.cert-n{font-family:'Syne',sans-serif;font-size:12px;font-weight:600;color:var(--text);margin-bottom:2px;}
+.cert-o{font-size:9px;color:var(--muted);}
+
+/* ─── CONTACT ────────────────────────────────────── */
+.cgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px;}
+.cc{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;display:flex;align-items:center;gap:14px;transition:all .22s;text-decoration:none;color:inherit;}
+.cc:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:0 8px 20px var(--shadow);}
+.cc-ico{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;transition:transform .18s;}
+.cc:hover .cc-ico{transform:scale(1.1);}
+.cc-l{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:var(--text);margin-bottom:2px;}
+.cc-s{font-size:9px;color:var(--muted);}
+.avail{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:26px 30px;display:flex;align-items:center;gap:22px;position:relative;overflow:hidden;margin-bottom:16px;}
+.avail::before{content:'';position:absolute;right:-30px;top:-30px;width:160px;height:160px;background:radial-gradient(circle,rgba(16,185,129,.05) 0%,transparent 70%);}
+.avail-t{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:var(--text);margin-bottom:3px;}
+.avail-s{font-size:11px;color:var(--muted);line-height:1.6;}
+.cv-btn{display:inline-flex;align-items:center;gap:8px;padding:10px 18px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:8px;color:#fff;font-family:'Syne',sans-serif;font-size:11px;font-weight:700;transition:all .22s;letter-spacing:.3px;text-decoration:none;flex-shrink:0;}
+.cv-btn:hover{transform:translateY(-2px);box-shadow:0 7px 18px rgba(56,183,255,.3);}
+
+/* ─── TIMELINE / EVOLUTION ───────────────────────── */
+.timeline{position:relative;padding-left:24px;}
+.timeline::before{content:'';position:absolute;left:6px;top:6px;bottom:6px;width:1px;background:linear-gradient(180deg,var(--accent),var(--accent2),transparent);}
+.tl-item{position:relative;margin-bottom:24px;}
+.tl-item::before{content:'';position:absolute;left:-21px;top:6px;width:7px;height:7px;border-radius:50%;background:var(--accent);border:2px solid var(--bg);}
+.tl-item:last-child{margin-bottom:0;}
+.tl-date{font-size:9px;color:var(--accent);letter-spacing:.8px;text-transform:uppercase;margin-bottom:4px;font-family:'Syne',sans-serif;}
+.tl-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px;}
+.tl-desc{font-size:10px;color:var(--muted);line-height:1.7;}
+
+/* ─── ISO / COMPLIANCE BADGE ─────────────────────── */
+.compliance-row{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;}
+.cbadge{display:flex;align-items:center;gap:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;flex:1;min-width:160px;}
+.cbadge-ico{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.cbadge-n{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:var(--text);margin-bottom:2px;}
+.cbadge-s{font-size:9px;color:var(--muted);}
+
+/* ─── MOBILE ─────────────────────────────────────── */
+.mob-top{display:none;position:fixed;top:0;width:100%;background:rgba(5,8,15,.94);backdrop-filter:blur(18px);border-bottom:1px solid var(--border);padding:12px 16px;z-index:100;justify-content:space-between;align-items:center;}
+[data-theme="light"] .mob-top{background:rgba(242,245,251,.94);}
+@media(max-width:768px){
+  *{cursor:auto!important;}#cur,#cur-ring{display:none;}
+  aside{display:none;}.mob-top{display:flex;}
+  #app{flex-direction:column;}
+  main{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+  #hero{padding:68px 16px 22px!important;}
+  #hero.col{padding:12px 16px!important;}
+  #sects{padding:0 16px 70px!important;}
+  .stats,.g2,.gw,.g3,.stk,.mrow,.cgrid,.roles-grid{grid-template-columns:1fr;}
+  .ci-inner{padding-left:18px;}
+  .flow{overflow-x:auto;}
+  .avail{flex-wrap:wrap;gap:12px;}
+  .avail .cv-btn{margin-left:0!important;}
+}
+</style>
+</head>
+<body>
+<div id="cur"></div>
+<div id="cur-ring"></div>
+<div id="pts"></div>
+
+<div id="app">
+
+  <!-- MOB TOP -->
+  <div class="mob-top">
+    <div style="display:flex;align-items:center;gap:9px">
+      <div class="av" style="width:32px;height:32px;font-size:10px">NH</div>
+      <span style="font-family:'Syne',sans-serif;font-weight:700;font-size:12px">Nicolas Hernanz</span>
+    </div>
+    <button onclick="toggleTheme()" style="background:none;border:none;color:var(--muted);font-size:15px"><i class="fa-solid fa-circle-half-stroke"></i></button>
+  </div>
+
+  <!-- SIDEBAR -->
+  <aside>
+    <div class="logo-zone">
+      <div style="display:flex;align-items:center;gap:11px">
+        <div class="av">NH</div>
+        <div>
+          <div class="logo-name">Nicolas Hernanz</div>
+          <div class="logo-role" data-es="Security Engineer · SysAdmin" data-en="Security Engineer · SysAdmin">Security Engineer · SysAdmin</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav-section" data-es="Secciones" data-en="Sections">Secciones</div>
+    <button class="ni on" onclick="navTo('overview')"><i class="fa-solid fa-chart-line"></i> <span data-es="Resumen" data-en="Overview">Resumen</span></button>
+    <button class="ni" onclick="navTo('evolution')"><i class="fa-solid fa-timeline"></i> <span data-es="Evolución" data-en="Evolution">Evolución</span></button>
+    <button class="ni" onclick="navTo('projects')"><i class="fa-solid fa-rocket"></i> <span data-es="Proyectos" data-en="Projects">Proyectos</span></button>
+    <button class="ni" onclick="navTo('war-room')"><i class="fa-solid fa-shield-virus"></i> <span data-es="War Room" data-en="War Room">War Room</span> <span class="badge">24</span></button>
+    <button class="ni" onclick="navTo('skills')"><i class="fa-solid fa-layer-group"></i> <span data-es="Stack" data-en="Stack">Stack</span></button>
+    <button class="ni" onclick="navTo('roadmap')"><i class="fa-solid fa-graduation-cap"></i> <span data-es="Formación" data-en="Training">Formación</span></button>
+    <button class="ni" onclick="navTo('contact')"><i class="fa-solid fa-paper-plane"></i> <span data-es="Contacto" data-en="Contact">Contacto</span></button>
+
+    <div style="flex:1"></div>
+
+    <div class="side-ctrls">
+      <button class="ctrl-btn" onclick="toggleTheme()">
+        <i class="fa-solid fa-circle-half-stroke" style="font-size:11px"></i>
+        <span id="theme-lbl" data-es="Modo Oscuro" data-en="Dark Mode">Modo Oscuro</span>
+        <div class="trk on" id="trk"><div class="trk-th"></div></div>
+      </button>
+      <button class="lang-btn" onclick="toggleLang()">
+        <i class="fa-solid fa-language" style="font-size:11px"></i>
+        <span data-es="Idioma" data-en="Language">Idioma</span>
+        <div class="lang-chips">
+          <span class="lc on" id="lc-es">ES</span>
+          <span class="lc" id="lc-en">EN</span>
+        </div>
+      </button>
+    </div>
+
+    <div class="side-footer">
+      <div class="sf-ttl" data-es="Estado" data-en="Status">Estado</div>
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:3px">
+        <div class="pulse-dot"></div>
+        <span class="sf-name" data-es="Open to Work" data-en="Open to Work">Open to Work</span>
+      </div>
+      <div class="sf-sub" data-es="SOC L2 · Security Engineer · Remoto" data-en="SOC L2 · Security Engineer · Remote">SOC L2 · Security Engineer · Remoto</div>
+      <div class="sf-links">
+        <a href="https://www.linkedin.com/in/nicolas-hernanz-ba2846255/" target="_blank" class="sf-a"><i class="fa-brands fa-linkedin"></i></a>
+        <a href="https://nicolashernanz.github.io/Portfolio2026/" target="_blank" class="sf-a"><i class="fa-brands fa-github"></i></a>
+        <a href="CV_Nicolas_Hernanz.pdf" download class="sf-a"><i class="fa-solid fa-file-arrow-down"></i></a>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main id="ms">
+
+    <!-- HERO -->
+    <div id="hw">
+      <div id="hero">
+        <div class="h-pre" data-es="// Portafolio · Security Engineering" data-en="// Portfolio · Security Engineering">// Portafolio · Security Engineering</div>
+        <div class="h-row">
+          <h1 class="h-name glitch" data-text="Nicolas Hernanz">Nicolas Hernanz</h1>
+          <div class="h-inline">
+            <span style="color:var(--accent)" data-es="Security Engineer" data-en="Security Engineer">Security Engineer</span>
+            <div class="hsep"></div>
+            <span data-es="SOC · SOAR · IA" data-en="SOC · SOAR · AI">SOC · SOAR · IA</span>
+            <div class="hsep"></div>
+            <span style="color:var(--accent3)">&#9679; <span data-es="Open to Work" data-en="Open to Work">Open to Work</span></span>
+          </div>
+        </div>
+        <div class="h-desc" data-es="Todo lo que construyo nace de un problema real que veo en el día a día. Cuando algo tarda demasiado, falla, o podría automatizarse — lo construyo. El SOC, el agente IA, la auditoría de identidades con Graph API: no son proyectos de laboratorio para el CV, son respuestas concretas a limitaciones reales que encontré trabajando. Aprendo construyendo, y construyo porque creo que hay mejores formas de hacer las cosas." data-en="Everything I build starts from a real problem I see day to day. When something takes too long, fails, or could be automated — I build it. The SOC, the AI agent, the Graph API identity audit: these aren't lab projects for the resume, they're concrete answers to real limitations I found while working. I learn by building, and I build because I believe there are better ways to do things.">Todo lo que construyo nace de un problema real que veo en el día a día. Cuando algo tarda demasiado, falla, o podría automatizarse — lo construyo. El SOC, el agente IA, la auditoría de identidades con Graph API: no son proyectos de laboratorio para el CV, son respuestas concretas a limitaciones reales que encontré trabajando. Aprendo construyendo, y construyo porque creo que hay mejores formas de hacer las cosas.</div>
+        <div class="h-tags">
+          <span class="tag ta"><i class="fa-solid fa-brain"></i> <span data-es="Security AI Engineer" data-en="Security AI Engineer">Security AI Engineer</span></span>
+          <span class="tag td"><i class="fa-solid fa-shield-halved"></i> SOC / SOAR</span>
+          <span class="tag td"><i class="fa-brands fa-microsoft"></i> M365 / Entra ID</span>
+          <span class="tag td"><i class="fa-solid fa-network-wired"></i> FortiGate</span>
+          <span class="tag td"><i class="fa-brands fa-python"></i> Python</span>
+          <span class="tag tg"><i class="fa-solid fa-circle"></i> <span data-es="Open to Work — Remoto" data-en="Open to Work — Remote">Open to Work — Remoto</span></span>
+        </div>
+      </div>
+    </div>
+
+    <div id="sects">
+
+      <!-- OVERVIEW -->
+      <div class="sb" id="sec-overview">
+        <div class="slbl"><span>//</span> <span data-es="Resumen General" data-en="General Overview">Resumen General</span></div>
+        <div class="stats">
+          <div class="sc r scan"><div class="sc-bg">24</div><div class="sc-ic"><i class="fa-solid fa-fire-extinguisher"></i></div><div class="sc-v">24+</div><div class="sc-l" data-es="Incidentes Resueltos" data-en="Resolved Incidents">Incidentes Resueltos</div></div>
+          <div class="sc b scan"><div class="sc-bg">300</div><div class="sc-ic"><i class="fa-solid fa-users"></i></div><div class="sc-v">300</div><div class="sc-l" data-es="Usuarios Tenant" data-en="Tenant Users">Usuarios Tenant</div></div>
+          <div class="sc g scan"><div class="sc-bg">2s</div><div class="sc-ic"><i class="fa-solid fa-bolt"></i></div><div class="sc-v">&lt;2s</div><div class="sc-l" data-es="Detección → Aislamiento" data-en="Detection → Isolation">Detección → Aislamiento</div></div>
+          <div class="sc p scan"><div class="sc-bg">12</div><div class="sc-ic"><i class="fa-solid fa-user-shield"></i></div><div class="sc-v">12</div><div class="sc-l" data-es="Identidades en Riesgo" data-en="Risky Identities">Identidades en Riesgo</div></div>
+        </div>
+        <div class="gw">
+          <div class="card scan">
+            <div class="slbl" style="margin-bottom:12px"><span>//</span> <span data-es="Actividad Reciente" data-en="Recent Activity">Actividad Reciente</span></div>
+            <div id="feed-list"></div>
+            <button onclick="navTo('war-room')" style="margin-top:10px;font-size:10px;color:var(--accent);background:none;border:none;padding:0;font-family:'JetBrains Mono',monospace;display:flex;align-items:center;gap:5px">
+              <span data-es="Ver todos los casos" data-en="View all cases">Ver todos los casos</span> <i class="fa-solid fa-arrow-right" style="font-size:8px"></i>
+            </button>
+          </div>
+          <div class="card scan">
+            <div class="slbl" style="margin-bottom:12px"><span>//</span> <span data-es="Nivel de Competencia" data-en="Skill Level">Nivel de Competencia</span></div>
+            <div id="bars"></div>
+          </div>
+        </div>
+
+        <!-- Roles emergentes -->
+        <div style="margin-top:16px">
+          <div class="slbl"><span>//</span> <span data-es="Roles que se Perfilan" data-en="Emerging Roles">Roles que se Perfilan</span></div>
+          <div class="roles-grid" id="roles-grid"></div>
+        </div>
+      </div>
+
+      <!-- EVOLUCIÓN -->
+      <div class="sb" id="sec-evolution">
+        <div class="slbl"><span>//</span> <span data-es="Trayectoria y Evolución" data-en="Career Path & Evolution">Trayectoria y Evolución</span></div>
+        <div class="g2">
+          <div class="card">
+            <div class="slbl" style="margin-bottom:16px"><span>//</span> <span data-es="De Dónde Vengo" data-en="Where I Come From">De Dónde Vengo</span></div>
+            <div class="timeline" id="timeline"></div>
+          </div>
+          <div class="card">
+            <div class="slbl" style="margin-bottom:14px"><span>//</span> <span data-es="Auditorías & Compliance" data-en="Audits & Compliance">Auditorías & Compliance</span></div>
+            <div style="font-size:11px;color:var(--muted);line-height:1.85;margin-bottom:14px" data-es="Participé como Técnico Interno en dos procesos de auditoría externa. Sin jefe de ciberseguridad por encima, sin guía previa — todo autogestión y aprendizaje en el camino." data-en="I participated as Internal Technician in two external audit processes. No CISO above me, no prior guidance — all self-managed learning on the go.">Participé como Técnico Interno en dos procesos de auditoría externa. Sin jefe de ciberseguridad por encima, sin guía previa — todo autogestión y aprendizaje en el camino.</div>
+            <div class="compliance-row">
+              <div class="cbadge"><div class="cbadge-ico" style="background:rgba(16,185,129,.1)"><i class="fa-solid fa-certificate" style="color:var(--accent3)"></i></div><div><div class="cbadge-n">ISO 27001</div><div class="cbadge-s" data-es="Auditoría satisfactoria · Técnico Interno" data-en="Successful audit · Internal Technician">Auditoría satisfactoria · Técnico Interno</div></div></div>
+              <div class="cbadge"><div class="cbadge-ico" style="background:rgba(56,183,255,.1)"><i class="fa-solid fa-shield-check" style="color:var(--accent)"></i></div><div><div class="cbadge-n">ENS Nivel Medio</div><div class="cbadge-s" data-es="Auditoría satisfactoria · Técnico Interno" data-en="Successful audit · Internal Technician">Auditoría satisfactoria · Técnico Interno</div></div></div>
+            </div>
+            <div style="margin-top:16px;padding:14px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;border-left:3px solid var(--accent)">
+              <div style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--accent);margin-bottom:6px;font-family:'Syne',sans-serif" data-es="Conexión con el trabajo real" data-en="Connection to real work">Conexión con el trabajo real</div>
+              <div style="font-size:10px;color:var(--muted);line-height:1.7" data-es="Los automatismos del proyecto Graph API — auditoría de identidades, scoring de riesgo, trazabilidad de accesos — son directamente aplicables como evidencia técnica en controles ISO 27001 (A.9 Access Control) y ENS." data-en="The automations from the Graph API project — identity auditing, risk scoring, access traceability — are directly applicable as technical evidence in ISO 27001 controls (A.9 Access Control) and ENS.">Los automatismos del proyecto Graph API — auditoría de identidades, scoring de riesgo, trazabilidad de accesos — son directamente aplicables como evidencia técnica en controles ISO 27001 (A.9 Access Control) y ENS.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PROJECTS -->
+      <div class="sb" id="sec-projects">
+        <div class="slbl"><span>//</span> <span data-es="Proyectos" data-en="Projects">Proyectos</span></div>
+
+        <!-- PROJECT 1: SOC + AI AGENT -->
+        <div class="proj-card scan" style="margin-bottom:16px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;margin-bottom:5px">
+            <div>
+              <div class="proj-t" data-es="SOC Automatizado + Agente IA" data-en="Automated SOC + AI Agent">SOC Automatizado + Agente IA</div>
+              <div class="proj-s" data-es="Lab Personal → Producto Comercial — Arquitectura completa de detección, respuesta y razonamiento inteligente" data-en="Personal Lab → Commercial Product — Full architecture of detection, response and intelligent reasoning">Lab Personal → Producto Comercial — Arquitectura completa de detección, respuesta y razonamiento inteligente</div>
+            </div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <span class="tag tg"><i class="fa-solid fa-circle"></i> <span data-es="Activo" data-en="Active">Activo</span></span>
+              <span class="tag tp"><i class="fa-solid fa-brain"></i> <span data-es="IA Integrada" data-en="AI Integrated">IA Integrada</span></span>
+            </div>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:20px">
+            <span class="tag ta">Wazuh 4.9.0</span><span class="tag ta">Sysmon v15</span><span class="tag ta">Python 3.11 SOAR</span><span class="tag ta">Claude AI Agent</span><span class="tag ta">VirusTotal API v3</span><span class="tag ta">Docker</span><span class="tag ta">SQLite</span><span class="tag ta">Osquery</span>
+          </div>
+
+          <p class="proj-desc" data-es="Partí de cero: arquitectura, infraestructura, código, integración y empaquetado. El resultado es un SOC funcional para PYMEs que cierra el ciclo completo de detección, enriquecimiento, decisión y respuesta automática. La capa más reciente añade un agente IA (Claude) que razona sobre el contexto de cada alerta — no como sustituto de las reglas deterministas, sino como capa de razonamiento encima de ellas, capaz de generar narrativa técnica, evaluar la criticidad del activo y justificar cada decisión de aislamiento." data-en="Started from zero: architecture, infrastructure, code, integration and packaging. The result is a functional SOC for SMEs that closes the full cycle of detection, enrichment, decision and automatic response. The latest layer adds an AI agent (Claude) that reasons about each alert's context — not as a substitute for deterministic rules, but as a reasoning layer on top of them, capable of generating technical narrative, evaluating asset criticality and justifying each isolation decision.">Partí de cero: arquitectura, infraestructura, código, integración y empaquetado. El resultado es un SOC funcional para PYMEs que cierra el ciclo completo de detección, enriquecimiento, decisión y respuesta automática. La capa más reciente añade un agente IA (Claude) que razona sobre el contexto de cada alerta — no como sustituto de las reglas deterministas, sino como capa de razonamiento encima de ellas, capaz de generar narrativa técnica, evaluar la criticidad del activo y justificar cada decisión de aislamiento.</p>
+
+          <div class="slbl" style="margin-bottom:12px"><span>//</span> <span data-es="Flujo Completo con Agente IA" data-en="Full Flow with AI Agent">Flujo Completo con Agente IA</span></div>
+          <div class="flow">
+            <div class="fs-s hl"><div class="fs-ic"><i class="fa-solid fa-eye" style="color:var(--accent)"></i></div><div class="fs-n">Sysmon v15</div><div class="fs-d">SHA-256</div></div>
+            <div class="farr"><i class="fa-solid fa-arrow-right"></i></div>
+            <div class="fs-s hl"><div class="fs-ic"><i class="fa-solid fa-database" style="color:var(--accent)"></i></div><div class="fs-n">Wazuh SIEM</div><div class="fs-d" data-es="Correlación" data-en="Correlation">Correlación</div></div>
+            <div class="farr"><i class="fa-solid fa-arrow-right"></i></div>
+            <div class="fs-s hl"><div class="fs-ic"><i class="fa-solid fa-code" style="color:var(--accent2)"></i></div><div class="fs-n">SOAR Python</div><div class="fs-d" data-es="Reglas" data-en="Rules">Reglas</div></div>
+            <div class="farr"><i class="fa-solid fa-arrow-right"></i></div>
+            <div class="fs-s ai"><div class="fs-ic"><i class="fa-solid fa-brain" style="color:var(--purple)"></i></div><div class="fs-n">Agente IA</div><div class="fs-d" data-es="Razonamiento" data-en="Reasoning">Razonamiento</div></div>
+            <div class="farr"><i class="fa-solid fa-arrow-right"></i></div>
+            <div class="fs-s"><div class="fs-ic">&#128300;</div><div class="fs-n">VirusTotal</div><div class="fs-d">+SQLite</div></div>
+            <div class="farr"><i class="fa-solid fa-arrow-right"></i></div>
+            <div class="fs-s act"><div class="fs-ic"><i class="fa-solid fa-plug-circle-xmark" style="color:var(--red)"></i></div><div class="fs-n" data-es="Aislamiento" data-en="Isolation">Aislamiento</div><div class="fs-d">Active Response</div></div>
+          </div>
+
+          <div class="mrow">
+            <div class="met"><div class="met-v">&lt;2s</div><div class="met-l" data-es="Ejecución → Aislamiento" data-en="Execution → Isolation">Ejecución → Aislamiento</div></div>
+            <div class="met"><div class="met-v">65/67</div><div class="met-l" data-es="Detecciones EICAR en VT" data-en="EICAR Detections in VT">Detecciones EICAR en VT</div></div>
+            <div class="met"><div class="met-v">0</div><div class="met-l" data-es="Intervención Humana" data-en="Human Intervention">Intervención Humana</div></div>
+          </div>
+
+          <div class="slbl" style="margin-bottom:12px;margin-top:4px"><span>//</span> <span data-es="Qué Aporta el Agente IA" data-en="What the AI Agent Adds">Qué Aporta el Agente IA</span></div>
+          <div class="ach"><span class="ach-blt"><i class="fa-solid fa-arrow-right"></i></span><span data-es="&lt;strong&gt;Razonamiento contextual:&lt;/strong&gt; evalúa proceso, activo afectado, historial y riesgo antes de decidir si aislar." data-en="&lt;strong&gt;Contextual reasoning:&lt;/strong&gt; evaluates process, affected asset, history and risk before deciding to isolate.">&lt;strong&gt;Razonamiento contextual:&lt;/strong&gt; evalúa proceso, activo afectado, historial y riesgo antes de decidir si aislar.</span></div>
+          <div class="ach"><span class="ach-blt"><i class="fa-solid fa-arrow-right"></i></span><span data-es="&lt;strong&gt;Narrativa técnica automática:&lt;/strong&gt; genera el informe del incidente con justificación de cada decisión." data-en="&lt;strong&gt;Automatic technical narrative:&lt;/strong&gt; generates the incident report with justification for each decision.">&lt;strong&gt;Narrativa técnica automática:&lt;/strong&gt; genera el informe del incidente con justificación de cada decisión.</span></div>
+          <div class="ach"><span class="ach-blt"><i class="fa-solid fa-arrow-right"></i></span><span data-es="&lt;strong&gt;No reemplaza el SOAR determinista&lt;/strong&gt; — va encima como capa de razonamiento. Las reglas hardcodeadas siguen siendo el fallback de confianza." data-en="&lt;strong&gt;Doesn't replace the deterministic SOAR&lt;/strong&gt; — sits on top as a reasoning layer. Hardcoded rules remain the trusted fallback.">&lt;strong&gt;No reemplaza el SOAR determinista&lt;/strong&gt; — va encima como capa de razonamiento. Las reglas hardcodeadas siguen siendo el fallback de confianza.</span></div>
+          <div class="ach"><span class="ach-blt"><i class="fa-solid fa-arrow-right"></i></span><span data-es="&lt;strong&gt;Kit de despliegue para PYMEs:&lt;/strong&gt; imágenes Docker offline en USB + INSTALAR.sh. De 2-3h a 30-45 min de instalación." data-en="&lt;strong&gt;SME deployment kit:&lt;/strong&gt; offline Docker images on USB + INSTALAR.sh. From 2-3h down to 30-45 min installation.">&lt;strong&gt;Kit de despliegue para PYMEs:&lt;/strong&gt; imágenes Docker offline en USB + INSTALAR.sh. De 2-3h a 30-45 min de instalación.</span></div>
+        </div>
+
+        <!-- PROJECT 2: GRAPH API -->
+        <div class="proj-card scan">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;margin-bottom:5px">
+            <div>
+              <div class="proj-t" data-es="Auditoría de Identidades con IA — Producción" data-en="AI-powered Identity Audit — Production">Auditoría de Identidades con IA — Producción</div>
+              <div class="proj-s" data-es="Tenant real · 300 usuarios · Microsoft Graph API + Claude Code + Python" data-en="Real tenant · 300 users · Microsoft Graph API + Claude Code + Python">Tenant real · 300 usuarios · Microsoft Graph API + Claude Code + Python</div>
+            </div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <span class="tag tr"><i class="fa-solid fa-industry"></i> <span data-es="Producción Real" data-en="Real Production">Producción Real</span></span>
+              <span class="tag tp"><i class="fa-solid fa-robot"></i> Claude Code</span>
+            </div>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:20px">
+            <span class="tag ta">Microsoft Graph API</span><span class="tag ta">Claude Code CLI</span><span class="tag ta">Python 3.x</span><span class="tag ta">OAuth 2.0</span><span class="tag ta">Entra ID Protection</span><span class="tag ta">MSAL</span>
+          </div>
+
+          <p class="proj-desc" data-es="Construido en producción usando Claude Code directamente en el terminal. Creé una App Registration en Azure con OAuth 2.0 (Client Credentials), configuré los permisos necesarios en Graph API y desarrollé dos scripts Python que extraen todos los usuarios del tenant, analizan sus señales de riesgo y generan un informe priorizado con scoring 0-10. El sistema detectó 12 identidades en riesgo en menos de 2 minutos — incluyendo usuarios con credenciales comprometidas, accesos legacy sin MFA y logins desde países no habituales." data-en="Built in production using Claude Code directly in the terminal. I created an App Registration in Azure with OAuth 2.0 (Client Credentials), configured the necessary Graph API permissions and developed two Python scripts that extract all tenant users, analyze their risk signals and generate a prioritized report with 0-10 scoring. The system detected 12 at-risk identities in under 2 minutes — including users with compromised credentials, legacy access without MFA and logins from unusual countries.">Construido en producción usando Claude Code directamente en el terminal. Creé una App Registration en Azure con OAuth 2.0 (Client Credentials), configuré los permisos necesarios en Graph API y desarrollé dos scripts Python que extraen todos los usuarios del tenant, analizan sus señales de riesgo y generan un informe priorizado con scoring 0-10. El sistema detectó 12 identidades en riesgo en menos de 2 minutos — incluyendo usuarios con credenciales comprometidas, accesos legacy sin MFA y logins desde países no habituales.</p>
+
+          <div class="mrow">
+            <div class="met"><div class="met-v">&lt;2min</div><div class="met-l" data-es="Análisis 300 usuarios" data-en="Analysis 300 users">Análisis 300 usuarios</div></div>
+            <div class="met"><div class="met-v">85%</div><div class="met-l" data-es="Reducción tiempo triaje" data-en="Triage time reduction">Reducción tiempo triaje</div></div>
+            <div class="met"><div class="met-v">12</div><div class="met-l" data-es="Identidades en riesgo" data-en="At-risk identities">Identidades en riesgo</div></div>
+          </div>
+
+          <div class="slbl" style="margin-bottom:12px;margin-top:4px"><span>//</span> <span data-es="Sistema de Scoring (0-10)" data-en="Scoring System (0-10)">Sistema de Scoring (0-10)</span></div>
+          <div class="stk" style="margin-bottom:16px">
+            <div class="si"><div class="si-dot"></div><div><div class="si-n" data-es="Nivel de riesgo Entra ID" data-en="Entra ID risk level">Nivel de riesgo Entra ID</div><div class="si-d">high/medium/low → 2–6 pts</div></div></div>
+            <div class="si"><div class="si-dot"></div><div><div class="si-n">confirmedCompromised</div><div class="si-d">+1 pt</div></div></div>
+            <div class="si"><div class="si-dot" style="background:var(--red)"></div><div><div class="si-n" data-es="Ratio fallos auth ≥80%" data-en="Auth failure ratio ≥80%">Ratio fallos auth ≥80%</div><div class="si-d">+2 pts</div></div></div>
+            <div class="si"><div class="si-dot" style="background:var(--red)"></div><div><div class="si-n" data-es="País sospechoso detectado" data-en="Suspicious country detected">País sospechoso detectado</div><div class="si-d">+2 pts</div></div></div>
+            <div class="si"><div class="si-dot" style="background:var(--yellow)"></div><div><div class="si-n" data-es="Sin MFA configurado" data-en="No MFA configured">Sin MFA configurado</div><div class="si-d">+1 pt</div></div></div>
+            <div class="si"><div class="si-dot" style="background:var(--yellow)"></div><div><div class="si-n" data-es="Cliente legacy (IMAP/POP3)" data-en="Legacy client (IMAP/POP3)">Cliente legacy (IMAP/POP3)</div><div class="si-d">+1 pt</div></div></div>
+          </div>
+
+          <div style="padding:14px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;border-left:3px solid var(--accent3)">
+            <div style="font-size:8px;letter-spacing:1.2px;text-transform:uppercase;color:var(--accent3);margin-bottom:6px;font-family:'Syne',sans-serif" data-es="Valor como evidencia de compliance" data-en="Value as compliance evidence">Valor como evidencia de compliance</div>
+            <div style="font-size:10px;color:var(--muted);line-height:1.7" data-es="Los informes generados — scoring por usuario, accesos legacy, países, MFA — son evidencia técnica directamente aplicable a controles ISO 27001 A.9 (Access Control) y ENS. El proceso de auditoría de identidades que antes tomaba 15+ minutos por usuario ahora se ejecuta sobre todo el tenant en menos de 2 minutos." data-en="The generated reports — per-user scoring, legacy access, countries, MFA — are technical evidence directly applicable to ISO 27001 A.9 (Access Control) and ENS controls. The identity audit process that previously took 15+ minutes per user now runs across the entire tenant in under 2 minutes.">Los informes generados — scoring por usuario, accesos legacy, países, MFA — son evidencia técnica directamente aplicable a controles ISO 27001 A.9 (Access Control) y ENS. El proceso de auditoría de identidades que antes tomaba 15+ minutos por usuario ahora se ejecuta sobre todo el tenant en menos de 2 minutos.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- WAR ROOM -->
+      <div class="sb" id="sec-war-room">
+        <div class="slbl"><span>//</span> <span data-es="War Room · Casos Reales" data-en="War Room · Real Cases">War Room · Casos Reales</span></div>
+        <div class="wr-filters">
+          <button class="wrf on" data-s="all" onclick="filterW('all')"><span data-es="Todos" data-en="All">Todos</span> (<span id="wc-all">24</span>)</button>
+          <button class="wrf" data-s="critical" onclick="filterW('critical')"><span data-es="Crítico" data-en="Critical">Crítico</span></button>
+          <button class="wrf" data-s="high" onclick="filterW('high')"><span data-es="Alto" data-en="High">Alto</span></button>
+          <button class="wrf" data-s="medium" onclick="filterW('medium')"><span data-es="Medio" data-en="Medium">Medio</span></button>
+          <button class="wrf" data-s="low" onclick="filterW('low')"><span data-es="Bajo" data-en="Low">Bajo</span></button>
+        </div>
+        <div class="ci-list" id="ci-list"></div>
+      </div>
+
+      <!-- SKILLS -->
+      <div class="sb" id="sec-skills">
+        <div class="slbl"><span>//</span> <span data-es="Stack Tecnológico" data-en="Technology Stack">Stack Tecnológico</span></div>
+        <div class="g2" style="margin-bottom:14px">
+          <div class="card">
+            <div class="slbl" style="margin-bottom:10px"><span>//</span> <span data-es="Seguridad" data-en="Security">Seguridad</span></div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px">
+              <span class="sp">Microsoft Defender XDR</span><span class="sp">Wazuh SIEM/EDR</span><span class="sp">Fortinet FortiGate</span><span class="sp">Incident Response</span><span class="sp">Threat Hunting</span><span class="sp">Forensics</span><span class="sp">ANY.RUN</span><span class="sp">MITRE ATT&amp;CK</span>
+            </div>
+          </div>
+          <div class="card">
+            <div class="slbl" style="margin-bottom:10px"><span>//</span> <span data-es="Ingeniería & IA" data-en="Engineering & AI">Ingeniería & IA</span></div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px">
+              <span class="sp">Python 3 SOAR</span><span class="sp">Claude AI Agents</span><span class="sp">Microsoft Graph API</span><span class="sp">OAuth 2.0</span><span class="sp">Docker</span><span class="sp">Claude Code CLI</span><span class="sp">Tool Use / MCP</span><span class="sp">KQL</span>
+            </div>
+          </div>
+        </div>
+        <div class="card scan">
+          <div class="slbl" style="margin-bottom:12px"><span>//</span> <span data-es="Distribución de Competencias" data-en="Competency Distribution">Distribución de Competencias</span></div>
+          <div class="chart-w"><canvas id="rc"></canvas></div>
+        </div>
+      </div>
+
+      <!-- ROADMAP -->
+      <div class="sb" id="sec-roadmap">
+        <div class="slbl"><span>//</span> <span data-es="Formación & Certificaciones" data-en="Training & Certifications">Formación & Certificaciones</span></div>
+        <div id="certs"></div>
+      </div>
+
+      <!-- CONTACT -->
+      <div class="sb" id="sec-contact">
+        <div class="slbl"><span>//</span> <span data-es="Contacto" data-en="Contact">Contacto</span></div>
+        <div class="avail">
+          <div class="pulse-dot"></div>
+          <div style="flex:1">
+            <div class="avail-t" data-es="Disponible para nuevas oportunidades" data-en="Available for new opportunities">Disponible para nuevas oportunidades</div>
+            <div class="avail-s" data-es="SOC L2 · Security AI Engineer · Detection Engineer · Remoto. Respondo en menos de 24h." data-en="SOC L2 · Security AI Engineer · Detection Engineer · Remote. I respond within 24h.">SOC L2 · Security AI Engineer · Detection Engineer · Remoto. Respondo en menos de 24h.</div>
+          </div>
+          <a href="CV_Nicolas_Hernanz.pdf" download class="cv-btn" style="margin-left:auto">
+            <i class="fa-solid fa-file-arrow-down"></i> <span data-es="Descargar CV" data-en="Download CV">Descargar CV</span>
+          </a>
+        </div>
+        <div class="cgrid">
+          <a href="https://www.linkedin.com/in/nicolas-hernanz-ba2846255/" target="_blank" class="cc">
+            <div class="cc-ico" style="background:rgba(10,102,194,.12)"><i class="fa-brands fa-linkedin" style="color:#0a66c2"></i></div>
+            <div><div class="cc-l">LinkedIn</div><div class="cc-s">nicolas-hernanz-ba2846255</div></div>
+            <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:10px;color:var(--dim);margin-left:auto"></i>
+          </a>
+          <a href="https://nicolashernanz.github.io/Portfolio2026/" target="_blank" class="cc">
+            <div class="cc-ico" style="background:rgba(255,255,255,.04)"><i class="fa-brands fa-github" style="color:var(--text)"></i></div>
+            <div><div class="cc-l">GitHub</div><div class="cc-s">nicolashernanz.github.io</div></div>
+            <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:10px;color:var(--dim);margin-left:auto"></i>
+          </a>
+          <a href="mailto:nhcelemin9@gmail.com" class="cc">
+            <div class="cc-ico" style="background:rgba(56,183,255,.1)"><i class="fa-solid fa-envelope" style="color:var(--accent)"></i></div>
+            <div><div class="cc-l">Email</div><div class="cc-s">nhcelemin9@gmail.com</div></div>
+            <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:10px;color:var(--dim);margin-left:auto"></i>
+          </a>
+          <div class="cc">
+            <div class="cc-ico" style="background:rgba(16,185,129,.1)"><i class="fa-solid fa-location-dot" style="color:var(--accent3)"></i></div>
+            <div><div class="cc-l" data-es="Ubicación" data-en="Location">Ubicación</div><div class="cc-s" data-es="Gijón, Asturias · Disponible remotamente" data-en="Gijón, Asturias · Available remotely">Gijón, Asturias · Disponible remotamente</div></div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /sects -->
+  </main>
+</div><!-- /app -->
+
+<script>
+// ─── DATA ────────────────────────────────────────────
+var CASES = [
+  {id:"rovnix",t:{es:"Incidente Troyano Rovnix",en:"Rovnix Trojan Incident"},tag:"Threat Hunting / EDR",date:"Nov 2024",sev:"high",
+   sum:{es:"Alerta de Defender que requirió investigación del endpoint y limpieza completa.",en:"Defender alert requiring endpoint investigation and full cleanup."},
+   det:{es:"Defender generó una alerta en un endpoint de usuario que había bloqueado parcialmente una amenaza sin marcarla como crítica. Revisé la actividad del equipo en la consola de Defender, identifiqué el archivo descargado responsable de la alerta y verifiqué que no había persistencia adicional visible. Aislé el equipo desde la consola, procedí a la limpieza y verifiqué que el servidor interno desde el que se había descargado el archivo estaba limpio. El equipo quedó operativo tras confirmar que la amenaza había sido eliminada.",en:"Defender triggered an alert on a user endpoint that had partially blocked a threat without marking it as critical. I reviewed device activity in the Defender console, identified the downloaded file responsible for the alert and verified there was no additional visible persistence. I isolated the machine from the console, performed cleanup and verified the internal server from which the file had been downloaded was clean. The machine was back in operation after confirming the threat had been removed."},
+   tools:["Microsoft Defender for Endpoint","FortiGate","Incident Documentation"]},
+
+  {id:"chatgpt",t:{es:"Atribución de Actividad en Cuenta Compartida",en:"Activity Attribution on Shared Account"},tag:"Forensics / Logs",date:"Jan 2025",sev:"medium",
+   sum:{es:"Identificación de usuario responsable de una acción en herramienta sin logs nativos.",en:"Identifying the responsible user for an action in a tool without native logs."},
+   det:{es:"Me pidieron averiguar qué usuario había realizado una acción concreta en una cuenta de ChatGPT compartida entre varios compañeros. La herramienta no registra logs por usuario. Obtuve el timestamp aproximado de la acción, fui a los logs del firewall FortiGate y busqué qué IP corporativa estaba activa en esa franja horaria hacia el servicio. Cruzando la IP con Active Directory identifiqué al usuario responsable.",en:"I was asked to identify which user had performed a specific action on a ChatGPT account shared among colleagues. The tool keeps no per-user logs. I obtained the approximate timestamp of the action, checked FortiGate firewall logs for which corporate IP was active toward that service at that time, and by cross-referencing the IP with Active Directory I identified the responsible user."},
+   tools:["FortiGate Logs","Active Directory","Log Correlation"]},
+
+  {id:"confluence",t:{es:"Caída de Servicio Confluence",en:"Confluence Service Outage"},tag:"Network / Connectivity",date:"Feb 2025",sev:"medium",
+   sum:{es:"Diagnóstico de pérdida de conectividad entre componentes de la infraestructura.",en:"Connectivity loss diagnosis between infrastructure components."},
+   det:{es:"Confluence dejó de responder para todos los usuarios. Verifiqué que el servidor estaba activo y que el firewall local no estaba bloqueando el tráfico. Usando ping y curl desde el servidor proxy comprobé que el tráfico hacia el backend devolvía 'Destination Host Unreachable'. Revisando la configuración de red identifiqué que una ruta VPN estática entre la DMZ y la red de servidores había caído. Se restableció la ruta y el servicio volvió a funcionar.",en:"Confluence stopped responding for all users. I verified the server was up and the local firewall was not blocking traffic. Using ping and curl from the proxy server I confirmed traffic toward the backend returned Destination Host Unreachable. Reviewing the network configuration I identified that a static VPN route between the DMZ and the server network had dropped. The route was restored and the service came back online."},
+   tools:["Linux CLI","ping/curl","VMware vSphere","Network Routing"]},
+
+  {id:"pdf-evasion",t:{es:"Phishing Evasivo — Factura Sospechosa",en:"Evasive Phishing — Suspicious Invoice"},tag:"Phishing / Evasion",date:"Mar 2025",sev:"high",
+   sum:{es:"PDF sospechoso que no dio resultados claros en sandbox pero con dominio malicioso confirmado.",en:"Suspicious PDF with inconclusive sandbox results but confirmed malicious domain."},
+   det:{es:"Un usuario recibió un email con una factura en PDF de aspecto legítimo. Analicé el archivo en Any.Run y el resultado fue limpio — sin comportamiento malicioso visible. Sin embargo, el dominio del remitente no correspondía al proveedor real y al revisar las cabeceras del correo los registros SPF/DKIM no cuadraban. Bloqué el dominio en el firewall, moví el correo a cuarentena y avisé al usuario. Fue un caso que me enseñó que el resultado limpio en sandbox no descarta la amenaza si el contexto es sospechoso.",en:"A user received an email with a legitimate-looking PDF invoice. I analyzed the file in Any.Run and the result was clean — no visible malicious behavior. However, the sender domain did not match the real vendor and reviewing the email headers the SPF/DKIM records did not line up. I blocked the domain at the firewall, moved the email to quarantine and notified the user. A case that taught me a clean sandbox result does not rule out a threat if the context is suspicious."},
+   tools:["Any.RUN","Email Header Analysis","SPF/DKIM Review","FortiGate"]},
+
+  {id:"inetum",t:{es:"Análisis de Correo Sospechoso — Proveedor",en:"Suspicious Email Analysis — Vendor"},tag:"Phishing / BEC",date:"Apr 2025",sev:"medium",
+   sum:{es:"Correo de proveedor legítimo con formato inusual y señales de riesgo BEC.",en:"Legitimate vendor email with unusual format and BEC risk signals."},
+   det:{es:"Un usuario reportó un correo de un proveedor habitual que le pareció raro — el formato había cambiado y pedía que los pagos se realizaran a una cuenta bancaria diferente. Analicé el correo y el adjunto en sandbox: el adjunto era técnicamente benigno. Pero el contenido del correo — cambio urgente de cuenta bancaria sin preaviso — era una señal clara de posible BEC. Contacté directamente con el proveedor por teléfono para verificar la solicitud. Era un intento de fraude. Bloqueé al remitente y documenté el caso.",en:"A user reported a suspicious email from a regular vendor — the format had changed and it asked payments to be made to a different bank account. I analyzed the email and attachment in sandbox: the attachment was technically benign. But the email content — urgent bank account change with no prior notice — was a clear BEC risk signal. I contacted the vendor directly by phone to verify the request. It was a fraud attempt. I blocked the sender and documented the case."},
+   tools:["ANY.RUN","Email Header Analysis","User Awareness","BEC Assessment"]},
+
+  {id:"krebshell",t:{es:"Alerta EDR — Validación de Contexto",en:"EDR Alert — Context Validation"},tag:"Incident Response",date:"May 2025",sev:"low",
+   sum:{es:"Alerta de alta severidad en Defender que resultó ser actividad legítima tras investigación.",en:"High severity Defender alert that turned out to be legitimate activity after investigation."},
+   det:{es:"Defender generó una alerta de severidad alta sobre un archivo PHP en un endpoint. Como medida cautelar aislé el equipo desde la consola. Revisé la actividad del dispositivo: sin conexiones de red salientes sospechosas, sin nuevas entradas en el registro relacionadas con persistencia y sin servidor web activo en el equipo. Contacté con el usuario y resultó ser personal interno que estaba realizando pruebas en local. Liberé el equipo y documenté el caso como falso positivo con intención benigna, añadiendo contexto para futuros casos similares.",en:"Defender triggered a high severity alert on a PHP file on an endpoint. As a precaution I isolated the machine from the console. I reviewed device activity: no suspicious outbound network connections, no new registry entries related to persistence and no active web server on the machine. I contacted the user and it turned out to be internal staff running local tests. I released the machine and documented the case as a false positive with benign intent, adding context for future similar cases."},
+   tools:["Microsoft Defender for Endpoint","Registry Review","Context Investigation","Incident Documentation"]},
+
+  {id:"bf-identity",t:{es:"Credenciales Comprometidas — Phishing Masivo",en:"Compromised Credentials — Mass Phishing"},tag:"Identity / Phishing",date:"Nov 2024",sev:"high",
+   sum:{es:"Dos usuarios introducen credenciales en sitio de phishing. Respuesta y contención completas.",en:"Two users submitted credentials to a phishing site. Full response and containment."},
+   det:{es:"Durante una campaña de phishing masiva que suplantaba ofertas de Black Friday, dos usuarios de la organización introdujeron sus credenciales en un sitio falso. Entra ID Protection generó alertas de inicio de sesión de riesgo. Bloqueé ambas cuentas desde Entra ID, revoqué todas las sesiones activas, forcé el reseteo de contraseña y verifiqué en Defender que los equipos afectados no mostraban actividad posterior sospechosa. También apliqué Conditional Access temporal más restrictivo sobre las cuentas durante el período de verificación.",en:"During a mass phishing campaign impersonating Black Friday deals, two organization users submitted their credentials to a fake site. Entra ID Protection generated risk sign-in alerts. I blocked both accounts from Entra ID, revoked all active sessions, forced password reset and verified in Defender that the affected machines showed no subsequent suspicious activity. I also applied temporarily more restrictive Conditional Access on the accounts during the verification period."},
+   tools:["Entra ID Protection","Conditional Access","Microsoft Defender","Intune","Incident Response"]},
+
+  {id:"ps-obfuscated",t:{es:"Alerta PowerShell con Comandos Codificados",en:"Alert — PowerShell with Encoded Commands"},tag:"Endpoint / Malware",date:"Dec 2024",sev:"high",
+   sum:{es:"El EDR bloqueó la ejecución de un script que lanzaba PowerShell con comandos en Base64.",en:"EDR blocked execution of a script launching PowerShell with Base64-encoded commands."},
+   det:{es:"Defender for Endpoint alertó sobre un comando PowerShell sospechoso en un endpoint. El usuario había ejecutado un archivo JS descargado de internet. El script intentaba lanzar PowerShell con una cadena de comandos codificada en Base64 para conectarse a un dominio externo. El EDR bloqueó la ejecución antes de que llegara a ejecutarse. Aislé el equipo, eliminé el archivo, bloqueé el dominio externo en FortiGate y verifiqué que no había actividad adicional en el equipo.",en:"Defender for Endpoint alerted on a suspicious PowerShell command on an endpoint. The user had run a JS file downloaded from the internet. The script attempted to launch PowerShell with a Base64-encoded command string to connect to an external domain. The EDR blocked execution before it ran. I isolated the machine, removed the file, blocked the external domain in FortiGate and verified there was no additional activity on the device."},
+   tools:["Defender for Endpoint","FortiGate","PowerShell Log Analysis","Incident Documentation"]},
+
+  {id:"shadow-it",t:{es:"Dispositivo No Gestionado con Vulnerabilidades",en:"Unmanaged Device with Vulnerabilities"},tag:"Asset Management / Risk",date:"Jan 2025",sev:"critical",
+   sum:{es:"Equipo antiguo fuera de gestión encontrado en la red con actualizaciones pendientes y datos sensibles.",en:"Old unmanaged machine found on the network with pending updates and sensitive data."},
+   det:{es:"Durante una revisión de activos en Defender, detecté un equipo en la red que no estaba bajo gestión y tenía un número elevado de actualizaciones pendientes. Al investigar, el equipo almacenaba archivos corporativos que deberían estar en SharePoint y tenía credenciales en caché de una cuenta con permisos elevados. Coordiné la migración de los archivos a SharePoint, revoqué las credenciales en caché, retiré el equipo de la red y documenté el hallazgo como riesgo crítico resuelto.",en:"During an asset review in Defender I detected a machine on the network that was not under management and had a high number of pending updates. Investigating further, the machine stored corporate files that should have been in SharePoint and had cached credentials from an account with elevated permissions. I coordinated migration of the files to SharePoint, revoked the cached credentials, removed the machine from the network and documented the finding as a resolved critical risk."},
+   tools:["Microsoft Defender","Asset Review","SharePoint","Credential Review"]},
+
+  {id:"ceo-phishing",t:{es:"Correo Suplantando a Directivo",en:"Executive Impersonation Email"},tag:"Social Eng. / Phishing",date:"Dec 2024",sev:"medium",
+   sum:{es:"Email de ingeniería social suplantando a un directivo, sin payload malicioso.",en:"Social engineering email impersonating an executive, no malicious payload."},
+   det:{es:"Un usuario me reportó un correo que aparentemente provenía de un directivo de la empresa solicitando una acción urgente. Analicé el correo en ANY.RUN — sin adjuntos ni URLs maliciosas. Revisé las cabeceras: el dominio remitente no era el corporativo aunque era similar. Se trataba de ingeniería social pura sin payload técnico. Bloqueé el remitente, avisé al usuario de que no debía seguir ninguna instrucción de ese correo y envié un aviso general al equipo sobre este tipo de técnica.",en:"A user reported an email apparently from a company executive requesting urgent action. I analyzed the email in ANY.RUN — no malicious attachments or URLs. I checked the headers: the sender domain was not the corporate one although it looked similar. It was pure social engineering with no technical payload. I blocked the sender, informed the user not to follow any instructions from that email and sent a general notice to the team about this type of technique."},
+   tools:["ANY.RUN","Email Header Analysis","User Awareness","Sender Blocking"]},
+
+  {id:"sharepoint-aitm",t:{es:"Cuenta Comprometida Usada en SharePoint",en:"Compromised Account Used via SharePoint"},tag:"Cloud Security / IR",date:"Feb 2025",sev:"critical",
+   sum:{es:"Cuenta corporativa comprometida enviando emails masivos a través de SharePoint.",en:"Compromised corporate account sending mass emails through SharePoint."},
+   det:{es:"Detecté que una cuenta corporativa estaba siendo usada para enviar emails masivos a través de SharePoint a usuarios internos y externos. La cuenta había sido previamente comprometida. Desde Entra ID bloqueé la cuenta y revoqué todas las sesiones activas. Desde SharePoint Admin eliminé el contenido que el atacante había subido. Revisé en Purview los logs de actividad para trazar qué había hecho el atacante desde el momento del compromiso. Apliqué Conditional Access adicional para reforzar el acceso a SharePoint.",en:"I detected a corporate account being used to send mass emails through SharePoint to internal and external users. The account had been previously compromised. From Entra ID I blocked the account and revoked all active sessions. From SharePoint Admin I removed the content the attacker had uploaded. I reviewed activity logs in Purview to trace what the attacker had done since the moment of compromise. I applied additional Conditional Access to strengthen SharePoint access."},
+   tools:["Entra ID","SharePoint Admin","Microsoft Purview","Conditional Access","Incident Response"]},
+
+  {id:"teams-impersonation",t:{es:"Suplantación de CEO via Microsoft Teams",en:"CEO Impersonation via Microsoft Teams"},tag:"Social Eng. / Cloud",date:"Mar 2025",sev:"high",
+   sum:{es:"Usuario recibe mensajes de Teams de cuenta externa haciéndose pasar por el CEO.",en:"User receives Teams messages from an external account impersonating the CEO."},
+   det:{es:"Un usuario me avisó de que estaba recibiendo mensajes de Teams de quien aparecía como el CEO solicitando una transferencia urgente. Revisé el perfil del remitente en Teams Admin Center — era una cuenta de tenant externo con un nombre muy similar al del CEO real. Bloqueé el tenant externo, avisé al usuario y revisamos la configuración de acceso externo en Teams para añadir restricciones que redujeran este vector.",en:"A user flagged that they were receiving Teams messages from what appeared to be the CEO requesting an urgent transfer. I checked the sender profile in Teams Admin Center — it was an external tenant account with a name very similar to the real CEO. I blocked the external tenant, notified the user and we reviewed external access settings in Teams to add restrictions that would reduce this vector."},
+   tools:["Teams Admin Center","Entra ID External Access","Tenant Policy","User Awareness"]},
+
+  {id:"docusign-phishing",t:{es:"Phishing Imitando DocuSign",en:"DocuSign Phishing Imitation"},tag:"Phishing / Credential Harvest",date:"Apr 2025",sev:"high",
+   sum:{es:"Email con apariencia exacta de DocuSign enlazando a página de captura de credenciales M365.",en:"Email with exact DocuSign appearance linking to M365 credential harvesting page."},
+   det:{es:"Un usuario recibió un correo con el diseño exacto de DocuSign pidiendo firmar un contrato urgente. Revisé las cabeceras: el dominio remitente no era el oficial de DocuSign sino uno similar. El enlace del botón redirigía a una página que imitaba el portal de login de M365. Bloqueé el dominio en Defender for Office 365, puse el correo en cuarentena, notifiqué al usuario y envié un aviso al resto de la organización describiendo el patrón.",en:"A user received an email with the exact DocuSign design requesting urgent contract signature. I checked the headers: the sender domain was not DocuSign official but a lookalike. The button link redirected to a page mimicking the M365 login portal. I blocked the domain in Defender for Office 365, quarantined the email, notified the user and sent a notice to the rest of the organization describing the pattern."},
+   tools:["Email Header Analysis","Defender for Office 365","URL Analysis","User Awareness"]},
+
+  {id:"sharepoint-link",t:{es:"Phishing via Enlace SharePoint Legítimo con QR",en:"Phishing via Legitimate SharePoint Link with QR"},tag:"Cloud / Evasion",date:"May 2025",sev:"high",
+   sum:{es:"Enlace legítimo de SharePoint conteniendo documento con QR malicioso — evasión de filtros.",en:"Legitimate SharePoint link containing document with malicious QR — filter evasion."},
+   det:{es:"Un usuario reportó un correo con enlace a SharePoint que parecía interno. El enlace era real y apuntaba a un documento de SharePoint Online, por lo que los filtros de email no lo marcaron. Al abrir el documento, contenía únicamente un código QR. Escaneé el QR y redirigía a un dominio externo sospechoso imitando un portal de login. Retiré el documento de SharePoint, bloqueé el dominio de destino en el firewall y notifiqué a los usuarios sobre esta técnica de quishing.",en:"A user reported an email with a SharePoint link that appeared to be internal. The link was real and pointed to a SharePoint Online document, so email filters did not flag it. Opening the document revealed only a QR code. I scanned the QR and it redirected to a suspicious external domain mimicking a login portal. I removed the document from SharePoint, blocked the destination domain at the firewall and notified users about this quishing technique."},
+   tools:["SharePoint Admin","URL Analysis","FortiGate","Defender for Office 365","User Awareness"]},
+
+  {id:"invoice-bec",t:{es:"BEC — Facturas con Datos Bancarios Modificados",en:"BEC — Invoices with Modified Bank Details"},tag:"BEC / Financial Fraud",date:"Jun 2025",sev:"critical",
+   sum:{es:"Cuenta de contabilidad comprometida enviando facturas con número de cuenta modificado.",en:"Compromised accounting account sending invoices with modified bank account number."},
+   det:{es:"Detecté actividad inusual en una cuenta del departamento de contabilidad — estaba enviando emails a proveedores con facturas que incluían un número de cuenta bancaria diferente al habitual. Bloqueé la cuenta desde Entra ID, revoqué las sesiones activas y revisé en Purview el historial de correos enviados para identificar a qué proveedores habían llegado las facturas falsas. Notifiqué a los proveedores afectados para que no realizaran transferencias. Reforcé las políticas de MFA para el departamento de contabilidad.",en:"I detected unusual activity on an accounting department account — it was sending emails to vendors with invoices containing a different bank account number than usual. I blocked the account from Entra ID, revoked active sessions and reviewed the sent email history in Purview to identify which vendors had received the fake invoices. I notified affected vendors not to make transfers. I strengthened MFA policies for the accounting department."},
+   tools:["Entra ID","Microsoft Purview","Exchange Online","MFA Policy","Incident Response"]},
+
+  {id:"fake-it-helpdesk",t:{es:"Vishing — Falso Soporte de Microsoft",en:"Vishing — Fake Microsoft Support"},tag:"Social Eng. / Vishing",date:"Jul 2025",sev:"medium",
+   sum:{es:"Usuario recibe llamada de alguien haciéndose pasar por soporte técnico de Microsoft.",en:"User receives call from someone impersonating Microsoft technical support."},
+   det:{es:"Un usuario me consultó porque había recibido una llamada de alguien que se identificó como soporte de Microsoft, diciéndole que su equipo tenía un problema crítico y que debía instalar TeamViewer para que pudieran acceder y solucionarlo. El usuario no había hecho nada todavía. Le expliqué que Microsoft nunca contacta proactivamente a los usuarios por teléfono para este tipo de situaciones y que era un intento de vishing. Documenté el caso y enviamos un aviso al equipo con el patrón.",en:"A user consulted me because they had received a call from someone identifying as Microsoft support, telling them their machine had a critical issue and they should install TeamViewer so they could access and fix it. The user had not done anything yet. I explained that Microsoft never proactively contacts users by phone for this type of situation and that it was a vishing attempt. I documented the case and we sent a notice to the team with the pattern."},
+   tools:["User Awareness","Incident Documentation","Security Awareness"]},
+
+  {id:"mfa-fatigue",t:{es:"Bombardeo de Notificaciones MFA",en:"MFA Notification Bombing"},tag:"Identity / MFA",date:"Aug 2025",sev:"high",
+   sum:{es:"Usuario de dirección recibe notificaciones MFA continuas que no había iniciado.",en:"Executive user receives continuous MFA notifications they did not initiate."},
+   det:{es:"Un usuario de dirección me contactó porque estaba recibiendo notificaciones de autenticación en su móvil de forma continua sin haber iniciado ningún login. Desde Entra ID verifiqué que había un volumen anómalo de intentos de autenticación sobre esa cuenta. Bloqueé la cuenta temporalmente, forcé el cambio de contraseña y revisé los logs para identificar el origen de los intentos. Aproveché el caso para activar Number Matching en las políticas de MFA del tenant, lo que hace que el usuario tenga que introducir un número que aparece en pantalla antes de aprobar, evitando aprobaciones por error.",en:"An executive user contacted me because they were continuously receiving authentication notifications on their phone without having initiated any login. From Entra ID I verified there was an anomalous volume of authentication attempts on that account. I temporarily blocked the account, forced a password change and reviewed logs to identify the source of the attempts. I used the case to enable Number Matching in the tenant MFA policies, requiring users to enter a number shown on screen before approving, preventing accidental approvals."},
+   tools:["Entra ID Protection","MFA Policy","Number Matching","Conditional Access","Log Review"]},
+
+  {id:"onedrive-malware",t:{es:"Archivo Malicioso en OneDrive Compartido",en:"Malicious File in Shared OneDrive"},tag:"Cloud / Malware",date:"Sep 2025",sev:"high",
+   sum:{es:"Defender alerta sobre archivo con macro maliciosa en OneDrive compartido con compañeros.",en:"Defender alerts on file with malicious macro in OneDrive shared with colleagues."},
+   det:{es:"Defender for Office 365 generó una alerta sobre un archivo .xlsm en el OneDrive de un usuario. El archivo había sido compartido con varios compañeros. Retiré el archivo inmediatamente desde la consola de SharePoint Admin, verifiqué en los logs de actividad que ninguno de los destinatarios lo había abierto y analicé el archivo en sandbox para caracterizar la amenaza. El usuario lo había descargado de una web de plantillas de Excel. Bloqueé el dominio de origen y documenté los indicadores.",en:"Defender for Office 365 triggered an alert on an xlsm file in a user OneDrive. The file had been shared with several colleagues. I removed the file immediately from the SharePoint Admin console, verified in activity logs that none of the recipients had opened it and analyzed the file in sandbox to characterize the threat. The user had downloaded it from an Excel templates website. I blocked the source domain and documented the indicators."},
+   tools:["Defender for Office 365","SharePoint Admin","OneDrive Activity Logs","Sandbox Analysis"]},
+
+  {id:"qr-phishing",t:{es:"QR Code en PDF Adjunto — Quishing",en:"QR Code in Attached PDF — Quishing"},tag:"Phishing / Quishing",date:"Oct 2025",sev:"medium",
+   sum:{es:"PDF adjunto con QR code que redirigía a página de login falsa de M365.",en:"Attached PDF with QR code redirecting to a fake M365 login page."},
+   det:{es:"Un usuario reportó un correo con un PDF adjunto de apariencia oficial. El PDF solo contenía un QR code. Al escanearlo desde el móvil, redirigía a una página que imitaba el portal de login de M365 con un dominio sospechoso. Los filtros de email no habían detectado nada porque el PDF no contenía texto ni URLs directas — solo una imagen. Bloqueé el dominio de destino en el firewall y notifiqué a todos los usuarios sobre el riesgo de escanear QR codes recibidos por email.",en:"A user reported an email with an official-looking attached PDF. The PDF contained only a QR code. Scanning it from a mobile phone redirected to a page mimicking the M365 login portal with a suspicious domain. Email filters had not detected anything because the PDF contained no text or direct URLs — only an image. I blocked the destination domain at the firewall and notified all users about the risk of scanning QR codes received by email."},
+   tools:["URL Analysis","FortiGate","Defender for Office 365","User Awareness"]},
+
+  {id:"linkedin-recon",t:{es:"Phishing Personalizado con Datos de LinkedIn",en:"Personalized Phishing with LinkedIn Data"},tag:"Social Eng. / OSINT",date:"Nov 2025",sev:"medium",
+   sum:{es:"Varios empleados reciben phishing muy personalizado referenciando proyectos e info interna real.",en:"Several employees receive highly personalized phishing referencing real internal projects and info."},
+   det:{es:"Varios compañeros me reportaron correos externos que mencionaban proyectos reales de la empresa, nombres de compañeros y detalles que parecían internos. Revisé los correos y las cabeceras — todos provenían de dominios externos. El nivel de personalización sugería que el atacante había recopilado información pública disponible en LinkedIn. No pude determinar el método exacto, pero coordiné con RRHH para revisar qué información del equipo era públicamente visible y lanzamos un aviso interno sobre exposición en redes profesionales.",en:"Several colleagues reported external emails mentioning real company projects, colleague names and details that appeared internal. I reviewed the emails and headers — all came from external domains. The level of personalization suggested the attacker had gathered publicly available information from LinkedIn. I could not determine the exact method, but I coordinated with HR to review what team information was publicly visible and launched an internal notice about exposure on professional networks."},
+   tools:["Email Header Analysis","User Awareness","HR Coordination","Security Awareness"]},
+
+  {id:"helpdesk-impersonation",t:{es:"Phishing Suplantando al Equipo IT",en:"Phishing Impersonating the IT Team"},tag:"Phishing / Internal Impersonation",date:"Dec 2025",sev:"medium",
+   sum:{es:"Email haciéndose pasar por el equipo IT solicitando credenciales para una migración.",en:"Email impersonating the IT team requesting credentials for a migration."},
+   det:{es:"Varios usuarios recibieron un correo que decía ser del equipo de soporte IT, pidiendo que introdujeran sus credenciales en un formulario para una migración a un nuevo sistema de autenticación. El dominio del remitente era muy similar al corporativo pero con una letra diferente. Ningún usuario proporcionó datos. Los filtros automáticos no lo habían bloqueado porque el dominio era nuevo y no estaba en lista negra. Bloqueé el dominio, reporté la URL a Microsoft y revisamos las reglas de Defender for Office 365 para mejorar la detección de dominios similares al corporativo.",en:"Several users received an email claiming to be from the IT support team, asking them to enter their credentials in a form for a migration to a new authentication system. The sender domain was very similar to the corporate one but with one letter difference. No user provided data. Automatic filters had not blocked it because the domain was new and not yet blacklisted. I blocked the domain, reported the URL to Microsoft and we reviewed Defender for Office 365 rules to improve detection of domains similar to the corporate one."},
+   tools:["Defender for Office 365","Domain Blocking","Email Filter Rules","User Awareness"]},
+
+  {id:"whatsapp-smishing",t:{es:"Smishing — Suplantación de RRHH por WhatsApp",en:"Smishing — HR Impersonation via WhatsApp"},tag:"Social Eng. / Mobile",date:"Jan 2026",sev:"low",
+   sum:{es:"Empleados reciben WhatsApps de número desconocido haciéndose pasar por RRHH.",en:"Employees receive WhatsApp messages from unknown number impersonating HR."},
+   det:{es:"Varios empleados me reportaron mensajes de WhatsApp de un número desconocido que se identificaba como RRHH, solicitando datos bancarios para una actualización urgente de nómina. Ninguno proporcionó datos. Aunque el vector estaba fuera del perímetro técnico de la empresa, coordiné con RRHH para enviar un comunicado interno recordando que los canales oficiales nunca solicitan datos sensibles por WhatsApp ni por mensajería personal.",en:"Several employees reported WhatsApp messages from an unknown number identifying as HR, requesting bank details for an urgent payroll update. Nobody provided data. Although the vector was outside the company technical perimeter, I coordinated with HR to send an internal communication reminding staff that official channels never request sensitive data via WhatsApp or personal messaging."},
+   tools:["User Awareness","HR Coordination","Security Communication"]},
+
+  {id:"azure-ad-enum",t:{es:"Intentos de Acceso Anómalos en Entra ID",en:"Anomalous Access Attempts in Entra ID"},tag:"Identity / Recon",date:"Feb 2026",sev:"medium",
+   sum:{es:"Patrón de intentos de autenticación fallidos desde IPs externas sobre varias cuentas.",en:"Pattern of failed authentication attempts from external IPs against multiple accounts."},
+   det:{es:"Revisando los logs de inicio de sesión en Entra ID detecté un patrón inusual: múltiples intentos de autenticación fallidos desde IPs externas sobre diferentes cuentas del tenant en un período corto. Las cuentas no llegaron a comprometerse. Revisé las IPs involucradas, verifiqué que tenían mala reputación y las bloqueé en el Conditional Access. Ajusté también la configuración del tenant para limitar información expuesta en endpoints públicos de Microsoft y documenté el patrón para el equipo.",en:"Reviewing sign-in logs in Entra ID I detected an unusual pattern: multiple failed authentication attempts from external IPs against different tenant accounts in a short period. The accounts were not compromised. I reviewed the involved IPs, verified they had bad reputation and blocked them in Conditional Access. I also adjusted tenant configuration to limit information exposed through Microsoft public endpoints and documented the pattern for the team."},
+   tools:["Entra ID Sign-in Logs","Conditional Access","IP Reputation","Tenant Settings"]}
+,
+
+  {id:"sabsik",t:{es:"Troyano Sabsik — Factura Maliciosa",en:"Sabsik Trojan — Malicious Invoice"},tag:"Malware / Spearphishing",date:"Apr 2026",sev:"high",
+   sum:{es:"Script trojanizado descargado desde un adjunto de correo. Defender lo elimina antes de ejecutarse.",en:"Trojanized script downloaded from an email attachment. Defender removes it before execution."},
+   det:{es:"Un usuario de contabilidad recibió un correo de facturacion@fibratec.eu con asunto JM260330.337 y un adjunto FACTURA_2026.rar. Al abrirlo desde Outlook, Defender detectó Trojan:Script/Sabsik.TE.A!ml, lo eliminó y puso en cuarentena en menos de 2 segundos. Verifiqué la timeline del endpoint en Defender: sin procesos hijo del RAR, sin ejecución real — pre-execution confirmed. Revisé la cadena de procesos (explorer.exe → olk.exe → msedgewebview2.exe → RAR) sin anomalías. En Exchange tracé el remitente: fibratec.eu es un dominio legítimo activo desde 2022, probablemente comprometido. La IP de origen 82.223.99.96 limpia en VirusTotal — infraestructura IONOS. Entra ID sin inicios de sesión anómalos en la franja del incidente. Verdadero positivo contenido: sin ejecución, sin persistencia, sin movimiento lateral.",en:"An accounting user received an email from facturacion@fibratec.eu with subject JM260330.337 and attachment FACTURA_2026.rar. Opening it from Outlook triggered Defender detecting Trojan:Script/Sabsik.TE.A!ml, which was removed and quarantined in under 2 seconds. I verified the endpoint timeline in Defender: no child processes from the RAR, no actual execution — pre-execution confirmed. Reviewed the process chain (explorer.exe → olk.exe → msedgewebview2.exe → RAR) with no anomalies. Traced the sender in Exchange: fibratec.eu is a legitimate domain active since 2022, likely compromised rather than purpose-built. Source IP 82.223.99.96 clean on VirusTotal — IONOS infrastructure. Entra ID showed no anomalous sign-ins in the incident window. True positive, contained: no execution, no persistence, no lateral movement."},
+   tools:["Defender for Endpoint","Exchange Message Trace","Entra ID","VirusTotal","Process Tree Analysis"]}];
+
+var ROLES = [
+  {t:{es:"SOC Analyst L2 / L3",en:"SOC Analyst L2 / L3"},s:{es:"Triaje avanzado, threat hunting e IR. El perfil que ya estoy ejerciendo en la práctica.",en:"Advanced triage, threat hunting and IR. The profile I'm already practicing."},c:"var(--accent)",tag:{es:"Target primario",en:"Primary target"}},
+  {t:{es:"Detection Engineer",en:"Detection Engineer"},s:{es:"Escritura de reglas de detección, automatización de respuesta y cobertura de TTPs de MITRE ATT&CK.",en:"Detection rule writing, response automation and MITRE ATT&CK TTP coverage."},c:"var(--accent2)",tag:{es:"Alta afinidad",en:"High affinity"}},
+  {t:{es:"Security AI Engineer",en:"Security AI Engineer"},s:{es:"Integración de agentes IA en pipelines defensivos. Perfil emergente con pocos referentes reales.",en:"AI agent integration in defensive pipelines. Emerging profile with few real references."},c:"var(--purple)",tag:{es:"Emergente",en:"Emerging"}},
+  {t:{es:"Security Automation Engineer",en:"Security Automation Engineer"},s:{es:"SOAR, Python, APIs de seguridad. Construcción de los automatismos que operan el SOC.",en:"SOAR, Python, security APIs. Building the automations that operate the SOC."},c:"var(--accent3)",tag:{es:"Alta afinidad",en:"High affinity"}},
+  {t:{es:"Cloud Security Engineer",en:"Cloud Security Engineer"},s:{es:"M365, Entra ID, Graph API, Defender. Seguridad sobre identidades y workloads cloud.",en:"M365, Entra ID, Graph API, Defender. Security over cloud identities and workloads."},c:"var(--orange)",tag:{es:"Creciente",en:"Growing"}},
+  {t:{es:"AI Security Architect",en:"AI Security Architect"},s:{es:"Diseño de arquitecturas de seguridad que incorporan razonamiento IA. Perfil del futuro próximo.",en:"Security architecture design incorporating AI reasoning. Near-future profile."},c:"var(--red)",tag:{es:"Futuro próximo",en:"Near future"}}
+];
+
+var TIMELINE_ES = [
+  {date:"2024",title:"Helpdesk → SysAdmin",desc:"Primera experiencia laboral. Entrada como N1 y absorción rápida de N2+N3: VMware vSphere, Windows Server, AD, M365, PKI. Sin guía técnica directa."},
+  {date:"2024–2025",title:"SysAdmin + Seguridad",desc:"Primer incidente real (Rovnix). Despliego FortiGate, inicio con Defender XDR. ISO 27001 y ENS Nivel Medio como técnico interno."},
+  {date:"2025",title:"Security Analyst",desc:"Wazuh + Docker. Primeros casos de IR documentados. Construcción del lab SOC personal. ASIR + Ciberseguridad en curso."},
+  {date:"2025–Ahora",title:"Security Engineer + IA",desc:"SOAR Python propio. Agente IA sobre el SOC. Graph API + Claude Code en producción. Road to Security AI Engineer."}
+];
+var TIMELINE_EN = [
+  {date:"2024",title:"Helpdesk → SysAdmin",desc:"First work experience. Started as N1 and quickly absorbed N2+N3: VMware vSphere, Windows Server, AD, M365, PKI. Without direct technical guidance."},
+  {date:"2024–2025",title:"SysAdmin + Security",desc:"First real incident (Rovnix). Deployed FortiGate, started with Defender XDR. ISO 27001 and ENS Nivel Medio as internal technician."},
+  {date:"2025",title:"Security Analyst",desc:"Wazuh + Docker. First documented IR cases. Building personal SOC lab. ASIR + Cybersecurity program ongoing."},
+  {date:"2025–Now",title:"Security Engineer + AI",desc:"Own Python SOAR. AI agent over SOC. Graph API + Claude Code in production. Road to Security AI Engineer."}
+];
+
+var CERTS = [
+  {t:"CCNAv7: Switching, Routing & Wireless",org:"Cisco",s:{es:"Completado",en:"Completed"},ico:"fa-network-wired",bg:"rgba(56,183,255,.1)",ic:"var(--accent)"},
+  {t:"CyberOps Associate",org:"Cisco",s:{es:"Completado",en:"Completed"},ico:"fa-shield-halved",bg:"rgba(56,183,255,.1)",ic:"var(--accent)"},
+  {t:"Técnico Superior ASIR",org:"FormacionProfesional",s:{es:"En Curso · Nota media 8.5",en:"In Progress · Average grade 8.5"},ico:"fa-graduation-cap",bg:"rgba(251,191,36,.1)",ic:"var(--yellow)"},
+  {t:"Microsoft SC-200",org:"Microsoft",s:{es:"Objetivo 2026",en:"Target 2026"},ico:"fa-bullseye",bg:"rgba(99,102,241,.1)",ic:"#818cf8"},
+  {t:"Fortinet FCP Security",org:"Fortinet",s:{es:"En Proceso",en:"In Progress"},ico:"fa-fire-flame-curved",bg:"rgba(244,63,94,.1)",ic:"var(--red)"}
+];
+
+var sevColor={critical:"#f43f5e",high:"#fb923c",medium:"#fbbf24",low:"#10b981"};
+var sevLbl={es:{critical:"CRÍTICO",high:"ALTO",medium:"MEDIO",low:"BAJO"},en:{critical:"CRITICAL",high:"HIGH",medium:"MEDIUM",low:"LOW"}};
+
+// ─── STATE ────────────────────────────────────────────
+var isDark=true, lang="es", chartInited=false, radarChart=null;
+
+// ─── CURSOR ───────────────────────────────────────────
+var cur=document.getElementById('cur'),cring=document.getElementById('cur-ring');
+var mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',function(e){mx=e.clientX;my=e.clientY;cur.style.left=mx+'px';cur.style.top=my+'px';});
+(function tick(){rx+=(mx-rx)*.1;ry+=(my-ry)*.1;cring.style.left=rx+'px';cring.style.top=ry+'px';requestAnimationFrame(tick);})();
+document.addEventListener('mouseover',function(e){if(e.target.closest('button,a')){cur.style.width='13px';cur.style.height='13px';cring.style.width='44px';cring.style.height='44px';}});
+document.addEventListener('mouseout',function(e){if(e.target.closest('button,a')){cur.style.width='7px';cur.style.height='7px';cring.style.width='28px';cring.style.height='28px';}});
+
+// ─── PARTICLES ────────────────────────────────────────
+(function(){var c=document.getElementById('pts');for(var i=0;i<18;i++){var p=document.createElement('div');p.className='pt';p.style.cssText='left:'+Math.random()*100+'%;bottom:0;width:'+(Math.random()*1.4+.4)+'px;height:'+(Math.random()*1.4+.4)+'px;--dx:'+(Math.random()-.5)*50+'px;animation-duration:'+(Math.random()*14+9)+'s;animation-delay:'+(Math.random()*12)+'s;';c.appendChild(p);}})();
+
+// ─── THEME ────────────────────────────────────────────
+function toggleTheme(){
+  isDark=!isDark;
+  document.documentElement.setAttribute('data-theme',isDark?'dark':'light');
+  var t=document.getElementById('trk'),l=document.getElementById('theme-lbl');
+  if(t)t.classList.toggle('on',isDark);
+  if(l)l.textContent=isDark?(lang==='es'?'Modo Oscuro':'Dark Mode'):(lang==='es'?'Modo Claro':'Light Mode');
+  if(chartInited){radarChart.destroy();chartInited=false;initChart();}
+}
+
+// ─── LANGUAGE ─────────────────────────────────────────
+function toggleLang(){
+  lang=lang==='es'?'en':'es';
+  document.documentElement.setAttribute('data-lang',lang);
+  document.getElementById('lc-es').classList.toggle('on',lang==='es');
+  document.getElementById('lc-en').classList.toggle('on',lang==='en');
+  applyLang();
+  rebuildDynamic();
+}
+function applyLang(){
+  document.querySelectorAll('[data-es]').forEach(function(el){
+    var txt=el.getAttribute('data-'+lang);
+    if(txt)el.textContent=txt;
+  });
+}
+function rebuildDynamic(){
+  buildFeed();buildBars();buildTimeline();buildRoles();buildCerts();buildCases();
+  if(chartInited){radarChart.destroy();chartInited=false;initChart();}
+}
+
+// ─── BUILD FUNCTIONS ──────────────────────────────────
+function buildCases(){
+  var cl=document.getElementById('ci-list');
+  if(!cl)return;
+  cl.innerHTML=CASES.map(function(c,i){
+    var sv=sevColor[c.sev];
+    var sl=sevLbl[lang][c.sev];
+    return '<div class="ci" id="ci-'+c.id+'" data-sev="'+c.sev+'" style="--sv:'+sv+'">'
+      +'<button class="ci-btn" onclick="toggleCI(\''+c.id+'\')">'
+      +'<span class="ci-num">'+('0'+(i+1)).slice(-2)+'</span>'
+      +'<div class="ci-main">'
+      +'<div class="ci-t">'+c.t[lang]+'</div>'
+      +'<div class="ci-sum">'+c.sum[lang]+'</div>'
+      +'<div style="display:flex;gap:5px;margin-top:6px"><span class="tag tp" style="font-size:8px">'+c.tag+'</span></div>'
+      +'</div>'
+      +'<div class="ci-r">'
+      +'<span class="sv-b" style="color:'+sv+';border-color:'+sv+'30;background:'+sv+'0d">'+sl+'</span>'
+      +'<span class="ci-date">'+c.date+'</span>'
+      +'<i class="fa-solid fa-chevron-right ci-arr"></i>'
+      +'</div></button>'
+      +'<div class="ci-body"><div class="ci-inner"><hr><p>'+c.det[lang]+'</p>'
+      +'<div class="tl">'+( lang==='es'?'Herramientas':'Tools')+'</div>'
+      +'<div class="tw">'+c.tools.map(function(t){return '<span class="tag td">'+t+'</span>';}).join('')+'</div>'
+      +'</div></div></div>';
+  }).join('');
+}
+
+function buildFeed(){
+  var fl=document.getElementById('feed-list');
+  if(!fl)return;
+  fl.innerHTML=CASES.slice(-5).reverse().map(function(c){
+    return '<div class="fi"><div class="fdot" style="background:'+sevColor[c.sev]+'"></div>'
+      +'<div style="flex:1;min-width:0"><div class="ft">'+c.t[lang]+'</div><div class="fs">'+c.tag+'</div></div>'
+      +'<div class="fd">'+c.date+'</div></div>';
+  }).join('');
+}
+
+function buildBars(){
+  var skills=[
+    {n:{es:'Incident Response',en:'Incident Response'},p:85},
+    {n:{es:'Microsoft Defender',en:'Microsoft Defender'},p:82},
+    {n:{es:'Cloud / M365 / Graph',en:'Cloud / M365 / Graph'},p:80},
+    {n:{es:'Threat Hunting',en:'Threat Hunting'},p:75},
+    {n:{es:'Python / SOAR',en:'Python / SOAR'},p:73},
+    {n:{es:'KQL / Log Analysis',en:'KQL / Log Analysis'},p:70}
+  ];
+  var b=document.getElementById('bars');
+  if(!b)return;
+  b.innerHTML=skills.map(function(s){
+    return '<div class="prg"><div class="prg-lbl"><span>'+s.n[lang]+'</span><span>'+s.p+'%</span></div>'
+      +'<div class="prg-t"><div class="prg-f" data-w="'+s.p+'"></div></div></div>';
+  }).join('');
+  setTimeout(function(){document.querySelectorAll('.prg-f').forEach(function(f){f.style.width=f.dataset.w+'%';});},200);
+}
+
+function buildTimeline(){
+  var tl=document.getElementById('timeline');
+  if(!tl)return;
+  var data=lang==='es'?TIMELINE_ES:TIMELINE_EN;
+  tl.innerHTML=data.map(function(t){
+    return '<div class="tl-item"><div class="tl-date">'+t.date+'</div><div class="tl-title">'+t.title+'</div><div class="tl-desc">'+t.desc+'</div></div>';
+  }).join('');
+}
+
+function buildRoles(){
+  var rg=document.getElementById('roles-grid');
+  if(!rg)return;
+  rg.innerHTML=ROLES.map(function(r){
+    return '<div class="role-card" style="--rc:'+r.c+'">'
+      +'<div class="rc-tag" style="color:'+r.c+'">'+r.tag[lang]+'</div>'
+      +'<div class="rc-title">'+r.t[lang]+'</div>'
+      +'<div class="rc-sub">'+r.s[lang]+'</div>'
+      +'</div>';
+  }).join('');
+}
+
+function buildCerts(){
+  var cl=document.getElementById('certs');
+  if(!cl)return;
+  cl.innerHTML=CERTS.map(function(c){
+    var done=c.s.es.indexOf('Completado')>=0;
+    var inprog=c.s.es.indexOf('Curso')>=0||c.s.es.indexOf('Proceso')>=0;
+    var badge=done?'<span class="tag tg"><i class="fa-solid fa-check"></i> '+c.s[lang]+'</span>'
+      :inprog?'<span class="tag ta">'+c.s[lang]+'</span>'
+      :'<span class="tag tp">'+c.s[lang]+'</span>';
+    return '<div class="cert scan">'
+      +'<div class="cert-ico" style="background:'+c.bg+'"><i class="fa-solid '+c.ico+'" style="color:'+c.ic+'"></i></div>'
+      +'<div style="flex:1;min-width:0"><div class="cert-n">'+c.t+'</div><div class="cert-o">'+c.org+'</div></div>'
+      +badge+'</div>';
+  }).join('');
+}
+
+function initChart(){
+  if(chartInited)return;
+  var ctx=document.getElementById('rc');if(!ctx)return;
+  chartInited=true;
+  var lm=!isDark;
+  var gc=lm?'rgba(0,0,0,.06)':'rgba(255,255,255,.04)';
+  var lc=lm?'#5a7090':'#4e6a8a';
+  var labels=lang==='es'
+    ?['Incident Response','Threat Hunting','Forense','Redes/FW','Cloud/M365','Automatización IA']
+    :['Incident Response','Threat Hunting','Forensics','Network/FW','Cloud/M365','AI Automation'];
+  radarChart=new Chart(ctx,{
+    type:'radar',
+    data:{labels:labels,datasets:[{data:[85,75,70,72,80,73],backgroundColor:'rgba(56,183,255,.06)',borderColor:'rgba(56,183,255,.45)',borderWidth:1.5,pointBackgroundColor:'rgba(56,183,255,.85)',pointRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{r:{beginAtZero:true,max:100,grid:{color:gc},angleLines:{color:gc},ticks:{display:false},pointLabels:{color:lc,font:{family:'JetBrains Mono',size:9}}}}}
+  });
+}
+
+function toggleCI(id){
+  var item=document.getElementById('ci-'+id);
+  var was=item.classList.contains('open');
+  document.querySelectorAll('.ci.open').forEach(function(e){e.classList.remove('open');});
+  if(!was)item.classList.add('open');
+}
+
+function filterW(sev){
+  document.querySelectorAll('.wrf').forEach(function(b){b.classList.remove('on');});
+  document.querySelector('.wrf[data-s="'+sev+'"]').classList.add('on');
+  document.querySelectorAll('.ci').forEach(function(ci){
+    var show=sev==='all'||ci.dataset.sev===sev;
+    ci.classList.toggle('hid',!show);
+    if(!show)ci.classList.remove('open');
+  });
+}
+
+// ─── HERO SCROLL ──────────────────────────────────────
+var ms=document.getElementById('ms'),hero=document.getElementById('hero');
+ms.addEventListener('scroll',function(){hero.classList.toggle('col',ms.scrollTop>55);});
+
+// ─── NAV ──────────────────────────────────────────────
+var secMap={overview:'sec-overview',evolution:'sec-evolution',projects:'sec-projects','war-room':'sec-war-room',skills:'sec-skills',roadmap:'sec-roadmap',contact:'sec-contact'};
+function navTo(id){
+  document.querySelectorAll('.ni').forEach(function(n){n.classList.remove('on');});
+  var btn=document.querySelector('[onclick="navTo(\''+id+'\')"]');
+  if(btn)btn.classList.add('on');
+  var t=document.getElementById(secMap[id]);
+  if(t)ms.scrollTo({top:t.offsetTop-85,behavior:'smooth'});
+  if(id==='skills')setTimeout(initChart,500);
+}
+ms.addEventListener('scroll',function(){
+  var st=ms.scrollTop+150;var cur='overview';
+  Object.keys(secMap).forEach(function(nid){var el=document.getElementById(secMap[nid]);if(el&&el.offsetTop<=st)cur=nid;});
+  document.querySelectorAll('.ni').forEach(function(n){n.classList.remove('on');});
+  var a=document.querySelector('[onclick="navTo(\''+cur+'\')"]');
+  if(a)a.classList.add('on');
+});
+
+// ─── SCROLL REVEAL ────────────────────────────────────
+function initObserver(){
+  var obs=new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting){e.target.classList.add('vis');if(e.target.id==='sec-skills')initChart();}
+    });
+  },{threshold:.05,rootMargin:'0px 0px -20px 0px'});
+  document.querySelectorAll('.sb').forEach(function(el){obs.observe(el);});
+}
+
+// ─── INIT ─────────────────────────────────────────────
+buildCases();buildFeed();buildBars();buildTimeline();buildRoles();buildCerts();initObserver();
+</script>
+</body>
+</html>
